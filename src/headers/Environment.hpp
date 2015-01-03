@@ -1,5 +1,5 @@
-#ifndef __LAB3__ENVIRONMENT__
-#define __LAB3__ENVIRONMENT__
+#ifndef LAB3__ENVIRONMENT
+#define LAB3__ENVIRONMENT
 
 #include <vector>
 #include <map>
@@ -10,8 +10,10 @@
 #include "Actor.hpp"
 #include "Entity.hpp"
 #include "Utils.hpp"
-namespace Lab3{
+#include "Format.hpp"
 
+
+namespace Lab3{
 
 class Environment : public IO {
 
@@ -20,8 +22,8 @@ public:
 	Environment();
 	Environment(std::string name);
 
+	const std::string& Description() const;
 	std::vector<std::string> Directions() const;
-	std::string Name() const;
 	// virtual void OnPlayerEnter() = 0;
 	// virtual Environment* Neighbour(Direction direction) const = 0;
 	// virtual std::string Description() const = 0;
@@ -31,21 +33,24 @@ public:
 	virtual void Drop(Entity& item);
 	// virtual void Update() = 0;
 	//virtual void SetExits(const std::vector<Environment> environments);
-	void AddExit(std::string dir, Environment& e);
+	void AddExit(const std::string& dir, Environment* e);
+	void SetUpExits(const std::vector<std::unique_ptr<Environment>>& environments);
+	friend std::ostream& operator<<(std::ostream& os, const Environment& env);
 
 protected:
 
 	virtual void SaveImplementation(std::ostream& os) const override;
 	virtual void LoadImplementation(std::istream& is) override;
 
+	std::string _description;
+
 private:
 
 	std::map<std::string, Environment*> _exits;
-	std::vector<Entity*> _entities;
-	std::string _name;
+	std::vector<std::unique_ptr<Actor>> _actors;
+	std::vector<std::unique_ptr<Entity>> _entities;
 
-
-
+	IO_FACTORY_REGISTER_DECL(Environment);
 };
 
 }

@@ -1,5 +1,5 @@
-#ifndef __LAB3__ENTITY__
-#define __LAB3__ENTITY__
+#ifndef LAB3__ENTITY
+#define LAB3__ENTITY
 
 #include "IO.hpp"
 #include <typeinfo>
@@ -14,8 +14,6 @@ public:
 	Entity(std::string name);
 	Entity(std::string name, unsigned int price, unsigned int weight);
 
-	std::string Type() const;
-	std::string Name() const;
 	unsigned int Price() const;
 	unsigned int Weight() const;
 
@@ -23,8 +21,6 @@ public:
 
 protected:
 
-	std::string _name;
-	std::string _type;
 	unsigned int _price;
 	unsigned int _weight;
 
@@ -33,7 +29,7 @@ protected:
 
 private:
 
-
+	IO_FACTORY_REGISTER_DECL(Entity);
 
 };
 }

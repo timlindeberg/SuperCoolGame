@@ -10,8 +10,34 @@ std::vector<std::string> Utils::Split(const std::string& s, char delim){
 	return v;
 }
 
-// std::string Utils::FileToString(std::ifstream& file){
-// 	std::stringstream ss;
-// 	ss << file.rdbuf();
-// 	return ss.str();
-// }
+std::string& Utils::Trim(std::string& s) {
+    return LeftTrim(RightTrim(s));
+}
+
+std::string& Utils::LeftTrim(std::string& s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+
+std::string& Utils::RightTrim(std::string& s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+std::string Utils::FileToString(const std::string& fileName){
+	std::ifstream fstream(fileName);
+	std::stringstream ss;
+	ss << fstream.rdbuf();
+	fstream.close();
+	return ss.str();
+}
+
+std::string& Utils::Remove(std::string& s, char c){
+	s.erase(std::remove(s.begin(), s.end(), c), s.end());
+	return s;
+}
+
+std::string& Utils::Replace(std::string& s, char before, char after){
+	std::replace(s.begin(), s.end(), before, after);
+	return s;
+}

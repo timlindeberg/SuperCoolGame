@@ -1,11 +1,15 @@
-#ifndef __LAB3__GAME__
-#define __LAB3__GAME__
+#ifndef LAB3__GAME
+#define LAB3__GAME
 
 #include <fstream>
+#include <map>
+#include <utility>
+
 #include "IO.hpp"
 #include "Entity.hpp"
 #include "Environment.hpp"
 #include "Actor.hpp"
+#include "Parser.hpp"
 
 namespace Lab3{
 
@@ -13,15 +17,22 @@ class Game : public IO {
 	
 public:
 
+	typedef bool (Game::*CommandFunction)(const std::string&);
+	typedef std::map<std::string, CommandFunction> CommandMap;
+
 	// Methods
-	static Game* Instance();
+	static Game* Get();
 	
 	Game();
 	void Run();
-	Entity* GetPlayer() const;
+	Actor* GetPlayer() const;
 	bool IsRunning() const;
-	bool SaveGame(const std::string& fileName) const;
+
+	// Commands
+
+	bool SaveGame(const std::string& fileName);
 	bool LoadGame(const std::string& fileName);
+	bool Quit(const std::string& s);
 
 protected:
 
@@ -30,13 +41,19 @@ protected:
 
 private:
 
+	// Command map
+
+	bool ValidCommand(const std::string& command);
+
+	static const CommandMap _commandMap;
+	static CommandMap MakeCommandMap();
+
+	static const std::string _gameFilePath;
 	static Game* _instance;
 	bool _isRunning;
-	std::vector<Environment> _environments;
-	std::vector<Entity> _entities;
-	std::vector<Actor> _actors;
+	std::vector<std::unique_ptr<Environment>> _environments;
 
-	Entity* _player;
+	Actor* _player;
 
 };
 }

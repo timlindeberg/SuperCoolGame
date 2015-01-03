@@ -1,0 +1,14 @@
+{
+[ Environment room1 
+	" You are standing in a dark room. " 
+	{ [ Actor player ] } 
+	{ } 
+	{ North|room2 , West|room3 }
+] , 
+[ Environment room2
+	" You are standing in a bright room. "
+	{ }
+	{ }
+	{ South|room1 }
+]
+}

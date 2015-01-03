@@ -1,41 +1,31 @@
 #include "Entity.hpp"
 
-using namespace Lab3;
+namespace Lab3{
 
-Entity::Entity() : 
-	 	_type(typeid(*this).name())
-	{}
+IO_FACTORY_REGISTER_DEF(Entity);
+
+Entity::Entity() {}
 
 Entity::Entity(std::string name) :
-	 	_type(typeid(*this).name()),
-	 	_name(name), _price(-1), 
+	 	IO(name),
+	 	_price(-1), 
 	 	_weight(-1) 
 	{}
 
 Entity::Entity(std::string name, unsigned int price, unsigned int weight) :
-		 _type(typeid(*this).name()),
-		 _name(name),
+		 IO(name),
 		 _price(price),
 		 _weight(weight)
 	{}
 
 void Entity::SaveImplementation(std::ostream& os) const{
-	os << _name << " " << _price << " " << _weight; 
+	os << _price  << ' '; 
+	os << _weight << ' '; 
 }
 
 void Entity::LoadImplementation(std::istream& is){
-	is >> _name;
 	is >> _price;
 	is >> _weight;
-}
-
-
-std::string Entity::Type() const {
-	return _type;
-}
-
-std::string Entity::Name() const {
-	return _name;
 }
 
 unsigned int Entity::Price() const {
@@ -44,4 +34,10 @@ unsigned int Entity::Price() const {
 
 unsigned int Entity::Weight() const{
 	return _weight;
+}
+
+std::ostream& operator<<(std::ostream& os, const Lab3::Entity& e){
+	os << e.Name() << "(" << e._weight << ", " << e._price << ")";
+}
+
 }

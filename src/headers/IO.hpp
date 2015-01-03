@@ -1,34 +1,114 @@
-#ifndef __LAB3__SAVEABLE__
-#define __LAB3__SAVEABLE__
+#ifndef LAB3_IO
+#define LAB3_IO
 
 #include <iostream>
 #include <sstream>
 #include <exception>
+#include <stdexcept>
 #include <vector>
+#include <map>
+#include <functional>
+#include <memory>
+#include <cxxabi.h>
+
+#include "Utils.hpp"
+
+#define IO_FACTORY_REGISTER_DECL(NAME) \
+	static IO::FactoryRegistration<NAME> Register
+
+#define IO_FACTORY_REGISTER_DEF(NAME) \
+	IO::FactoryRegistration<NAME> NAME::Register(#NAME)
+
+#define CREATE_INSTANCE(NAME) \
+	IO::Factory<NAME>::CreateInstance(#NAME) 
+
+
+// Temporary print macros for debugging
+#define pr(a) std::cout << a << std::endl
+#define prn(a) std::cout << #a << ": " << a << std::endl
+#define prv(a)  { 												\
+					for(size_t i = 0; i < a.size(); ++i){		\
+						std::cout << i << ": " << a[i] << " ";	\
+					}											\
+					std::cout << std::endl;						\
+				}													\
 
 namespace Lab3{
 
-class IO{
-
+class IO {
 public:
 
+	IO();
+	IO(const std::string& name);
+
+	template<class T>
+	struct Factory{
+
+	public:
+		typedef std::map<std::string, std::function<std::unique_ptr<T>()> > CreationMap;	
+		static std::unique_ptr<T> CreateInstance(const std::string& className);
+
+	protected:
+
+		static CreationMap* GetMap();
+
+	private:
+		static CreationMap* map;
+
+	};
+
+	template<class T>
+	struct FactoryRegistration : public Factory<T> {
+		using Factory<T>::GetMap;
+		FactoryRegistration(const std::string& s);
+	};
+
 	const IO& Save() const;
+
+	std::string Type() const;
+	std::string Name() const;
+	void SetName(const std::string& name);
 
 	friend std::ostream& operator<<(std::ostream& os, const IO& saveable);
 	friend std::istream& operator>>(std::istream& is, IO& saveable);
 
-	static const char OBJECT_SEP;
+	static const char DESC_SIGN;
+	static const char OBJECT_START;
+	static const char OBJECT_END;
+	static const char LIST_START;
+	static const char LIST_END;
 	static const char LIST_SEP; 
 	static const char MAP_SEP;
+
 	static std::string ReadObject(std::istream& is);
-	static std::vector<std::string> ReadList(std::istream& is);
+	static std::string ReadList(std::istream& is);
+	static std::string ReadDescription(std::istream& is);
+
+	template<class T>
+	static std::unique_ptr<T> ParseObject(std::istream& is);
+
+	template<class T>
+	static std::vector<std::unique_ptr<T>> ParseList(std::istream& is);
+
+	template<class T>
+	static void PrintList(std::ostream& os, const std::vector<std::unique_ptr<T>>& list);
 
 protected:
 
 	virtual void SaveImplementation(std::ostream& os) const = 0;
 	virtual void LoadImplementation(std::istream& is) = 0;
+
+	std::string _name;
+
+private:
+
+	static std::string ReadBetween(std::istream& is, char startSign, char endSign);
+	template<class T> static std::unique_ptr<T> CreateInstance();
 };
 
+
 }
+#include "IO.tpp"
+
 
 #endif

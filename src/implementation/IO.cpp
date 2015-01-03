@@ -1,49 +1,94 @@
-#include "IO.hpp"
+#include "IO.hpp" 
 
 namespace Lab3{
 
-const char IO::OBJECT_SEP 	  = '%';
-const char IO::LIST_SEP       = '#';
-const char IO::MAP_SEP        = '|';
+
+const char IO::DESC_SIGN	= '\"';
+const char IO::OBJECT_START	= '[';
+const char IO::OBJECT_END	= ']';
+const char IO::LIST_START	= '{';
+const char IO::LIST_END		= '}';
+const char IO::LIST_SEP		= ',';
+const char IO::MAP_SEP		= '|';
+
+IO::IO() {}
+
+IO::IO(const std::string& name) : _name(name) {}
+
 
 const IO& IO::Save() const{
 	return static_cast<const IO&>(*this);
 }
 
-std::string IO::ReadObject(std::istream& is){
+std::string IO::Type() const{
+	int status;
+	std::string tmp(abi::__cxa_demangle(typeid(*this).name(),0,0,&status));
+	return Utils::Split(tmp, ':')[2];
+}
+
+std::string IO::Name() const{
+	return _name;
+}
+
+void IO::SetName(const std::string& name){
+	_name = name;
+}
+
+std::string IO::ReadBetween(std::istream& is, char startSign, char endSign){
 	std::string tmp;
 	is >> tmp;
-	if(tmp[0] != IO::OBJECT_SEP){
-		throw std::invalid_argument("Could not parse stuff, invalid formatting!");
+	if(tmp[0] != startSign){
+		throw std::invalid_argument("Could not read object, missing start sign");
 	}
+
+	size_t numStarts = 1;
 	std::stringstream ss;
-	while(is >> tmp && tmp[0] != IO::OBJECT_SEP){
-		ss << tmp;
+	while(numStarts != 0){
+		if(!(is >> tmp)){
+			throw std::invalid_argument("Could not parse object, missing end sign ");
+		}
+		if(tmp == " "){
+			// Ignore multiple spaces
+			continue;
+		}
+		char c = tmp[0];
+		if(c == endSign)
+			--numStarts;
+		else if(c == startSign)
+			++numStarts;
+
+		if(numStarts != 0){
+			ss << tmp << ' ';			
+		}
 	}
-	return ss.str();
+	std::string result = ss.str();
+	return Utils::Trim(result);
 }
 
-std::vector<std::string> IO::ReadList(std::istream& is){
-	std::vector<std::string> v;
-	std::string tmp;
-	is >> tmp;
-	if(tmp[0] != IO::LIST_SEP){
-		throw std::invalid_argument("Could not parse stuff, invalid formatting!");
-	}
-
-	while(is >> tmp && tmp[0] != IO::OBJECT_SEP){
-		v.push_back(tmp);
-	}
-	return v;
+std::string IO::ReadObject(std::istream& is){
+	return ReadBetween(is, IO::OBJECT_START, IO::OBJECT_END);
 }
 
-std::ostream& operator<<(std::ostream& os, const Lab3::IO& saveable){
-	saveable.SaveImplementation(os);
+std::string IO::ReadList(std::istream& is){
+	return ReadBetween(is, IO::LIST_START, IO::LIST_END);
+}
+
+std::string IO::ReadDescription(std::istream& is){
+	return ReadBetween(is, IO::DESC_SIGN, IO::DESC_SIGN);
+}
+
+std::ostream& operator<<(std::ostream& os, const Lab3::IO& object){
+	os << IO::OBJECT_START << ' ';
+	os << object.Type() << ' ';
+	os << object._name << ' ';
+	object.SaveImplementation(os);
+	os << IO::OBJECT_END;
 	return os;
 }
 
-std::istream& operator>>(std::istream& is, Lab3::IO& saveable){
-	saveable.LoadImplementation(is);
+std::istream& operator>>(std::istream& is, Lab3::IO& object){
+	object.LoadImplementation(is);
 	return is;
 }
+
 }

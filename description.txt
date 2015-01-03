@@ -1,0 +1,11 @@
+File description:
+
+
+Game is a list of environments:
+
+[ Class name 
+	[ description ] 
+	[ list of actors in this room eg. [ Actor bob ] ] 
+	[ list of entities in this room eg. [ Sword coolsword1 ] ]
+	[ list of exits in this room eg. North|room5 ]
+]
