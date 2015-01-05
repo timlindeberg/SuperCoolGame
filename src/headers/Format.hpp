@@ -4,14 +4,19 @@
 #include <ostream>
 #include <sstream>
 #include <cstdarg>
+
+#define COLOR(output, code) Format::code << output << Format::FG_DEFAULT
+#define BG_COLOR(output, code) Format::code << output << Format::BG_DEFAULT
+#define STYLE(output, code) Format::code << output << Format::RESET
+
 namespace Format {
     enum Code {
         // Formatting
         RESET           = 0,
         BOLD            = 1,
         UNDERLINED      = 4,
-        INVERTED        = 7,
         BLINK           = 5,
+        INVERTED        = 7,
 
         // Foreground Colors
         FG_DEFAULT      = 39,

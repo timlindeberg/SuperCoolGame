@@ -31,7 +31,7 @@
 						std::cout << i << ": " << a[i] << " ";	\
 					}											\
 					std::cout << std::endl;						\
-				}													\
+				}												\
 
 namespace Lab3{
 
@@ -40,17 +40,18 @@ public:
 
 	IO();
 	IO(const std::string& name);
+	virtual ~IO();
 
-	template<class T>
 	struct Factory{
-
 	public:
-		typedef std::map<std::string, std::function<std::unique_ptr<T>()> > CreationMap;	
-		static std::unique_ptr<T> CreateInstance(const std::string& className);
+		typedef std::map<std::string, std::function<IO*()> > CreationMap;	
+		static IO* CreateInstance(const std::string& className);
 
 	protected:
 
 		static CreationMap* GetMap();
+		template<class T> 
+		static T* CreateInstance();
 
 	private:
 		static CreationMap* map;
@@ -58,8 +59,8 @@ public:
 	};
 
 	template<class T>
-	struct FactoryRegistration : public Factory<T> {
-		using Factory<T>::GetMap;
+	struct FactoryRegistration : private Factory {
+		using Factory::GetMap;
 		FactoryRegistration(const std::string& s);
 	};
 
@@ -91,7 +92,7 @@ public:
 	static std::vector<std::unique_ptr<T>> ParseList(std::istream& is);
 
 	template<class T>
-	static void PrintList(std::ostream& os, const std::vector<std::unique_ptr<T>>& list);
+	static void PrintList(std::ostream& os, const std::vector<T>& list);
 
 protected:
 
@@ -103,7 +104,6 @@ protected:
 private:
 
 	static std::string ReadBetween(std::istream& is, char startSign, char endSign);
-	template<class T> static std::unique_ptr<T> CreateInstance();
 };
 
 

@@ -41,3 +41,8 @@ std::string& Utils::Replace(std::string& s, char before, char after){
 	std::replace(s.begin(), s.end(), before, after);
 	return s;
 }
+
+std::string& Utils::ToLowerCase(std::string& s){
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+	return s;
+}

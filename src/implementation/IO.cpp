@@ -2,6 +2,7 @@
 
 namespace Lab3{
 
+typename IO::Factory::CreationMap* IO::Factory::map = nullptr;
 
 const char IO::DESC_SIGN	= '\"';
 const char IO::OBJECT_START	= '[';
@@ -11,10 +12,33 @@ const char IO::LIST_END		= '}';
 const char IO::LIST_SEP		= ',';
 const char IO::MAP_SEP		= '|';
 
+// Factory
+
+IO* IO::Factory::CreateInstance(const std::string& className){
+	if(!map){
+		std::cout << "Class " << className << " is not registered!" << std::endl;
+	}
+
+	if(!(*map).count(className)){
+		std::cout << "Invalid class name : " << className << std::endl;
+	}
+	return (*map)[className]();
+}
+
+typename IO::Factory::CreationMap* IO::Factory::GetMap(){
+	if(!map){
+		map = new CreationMap;	
+	} 
+	return map;
+}
+
+// IO
+
 IO::IO() {}
 
 IO::IO(const std::string& name) : _name(name) {}
 
+IO::~IO() {}
 
 const IO& IO::Save() const{
 	return static_cast<const IO&>(*this);
@@ -45,7 +69,7 @@ std::string IO::ReadBetween(std::istream& is, char startSign, char endSign){
 	std::stringstream ss;
 	while(numStarts != 0){
 		if(!(is >> tmp)){
-			throw std::invalid_argument("Could not parse object, missing end sign ");
+			throw std::invalid_argument("Could not parse object, missing end sign");
 		}
 		if(tmp == " "){
 			// Ignore multiple spaces

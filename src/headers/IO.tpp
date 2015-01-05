@@ -1,38 +1,18 @@
 namespace Lab3{
 
-template<class T> typename IO::Factory<T>::CreationMap* IO::Factory<T>::map = nullptr;
 
 //----------------------------------------------
 // Factory
 //----------------------------------------------
 
 template<class T>
-std::unique_ptr<T> IO::Factory<T>::CreateInstance(const std::string& className){
-	if(!map){
-		std::cout << "Class " << className << " is not registered!" << std::endl;
-	}
-	if(!(*map).count(className)){
-		std::cout << "Invalid class name : " << className << std::endl;
-	}
-	return (*map)[className]();
-}
-
-template<class T>
-typename IO::Factory<T>::CreationMap* IO::Factory<T>::GetMap(){
-	if(!map){
-		map = new CreationMap;	
-	} 
-	return map;
-}
-
-template<class T>
 IO::FactoryRegistration<T>::FactoryRegistration(const std::string& s) {
-	(*GetMap())[s] = &IO::CreateInstance<T>;
+	(*GetMap())[s] = &CreateInstance<T>;
 }
 
 template<class T>
-std::unique_ptr<T> IO::CreateInstance(){
-	return std::unique_ptr<T>(new T);
+T* IO::Factory::CreateInstance(){
+	return new T;
 }
 
 //----------------------------------------------
@@ -49,7 +29,12 @@ std::unique_ptr<T> IO::ParseObject(std::istream& is){
 		error.append(typeid(T).name());
 		throw std::invalid_argument(error);
 	}
-	std::unique_ptr<T> ptr = IO::Factory<T>::CreateInstance(type);
+	T* instance = dynamic_cast<T*>(IO::Factory::CreateInstance(type));
+	if(!instance){
+		std::string error = "Can't cast " + type;
+		throw std::invalid_argument(error);
+	}
+	std::unique_ptr<T> ptr(instance);
 	std::string name;
 	if(!(ss >> name)){
 		std::string error = "Failed to parse name of object of type ";
@@ -85,7 +70,7 @@ std::vector<std::unique_ptr<T>> IO::ParseList(std::istream& is){
 }
 
 template<class T>
-void IO::PrintList(std::ostream& os, const std::vector<std::unique_ptr<T>>& list){
+void IO::PrintList(std::ostream& os, const std::vector<T>& list){
 	size_t N = list.size();
 	if (N == 0){
 		os << IO::LIST_START << ' ' << IO::LIST_END << ' ';
@@ -94,9 +79,9 @@ void IO::PrintList(std::ostream& os, const std::vector<std::unique_ptr<T>>& list
 
 	os << IO::LIST_START << ' ';
 	for(size_t i = 0; i < N - 1; ++i){
-		os << list[i]->Save() << ' ' << IO::LIST_SEP << ' ';
+		os << Utils::Ptr(list[i])->Save() << ' ' << IO::LIST_SEP << ' ';
 	}
-	os << list[N - 1]->Save() << ' ';
+	os << Utils::Ptr(list[N - 1])->Save() << ' ';
 	os << IO::LIST_END << ' ';
 }
 }

@@ -1,3 +1,4 @@
+
 #ifndef LAB3__ENTITY
 #define LAB3__ENTITY
 
@@ -6,18 +7,18 @@
 
 namespace Lab3{
 	
-class Entity : public IO {
+class Item : public IO {
 
 public:
 
-	Entity();
-	Entity(std::string name);
-	Entity(std::string name, unsigned int price, unsigned int weight);
+	Item();
+	Item(std::string name);
+	Item(std::string name, unsigned int price, unsigned int weight);
 
 	unsigned int Price() const;
 	unsigned int Weight() const;
 
-	friend std::ostream& operator<<(std::ostream& os, const Entity& e);
+	friend std::ostream& operator<<(std::ostream& os, const Item& e);
 
 protected:
 
@@ -29,7 +30,7 @@ protected:
 
 private:
 
-	IO_FACTORY_REGISTER_DECL(Entity);
+	IO_FACTORY_REGISTER_DECL(Item);
 
 };
 }

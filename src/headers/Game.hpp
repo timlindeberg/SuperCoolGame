@@ -4,12 +4,13 @@
 #include <fstream>
 #include <map>
 #include <utility>
+#include <algorithm>
+#include <string>
 
 #include "IO.hpp"
-#include "Entity.hpp"
-#include "Environment.hpp"
+#include "Item.hpp"
+#include "Room.hpp"
 #include "Actor.hpp"
-#include "Parser.hpp"
 
 namespace Lab3{
 
@@ -17,22 +18,25 @@ class Game : public IO {
 	
 public:
 
-	typedef bool (Game::*CommandFunction)(const std::string&);
+	typedef bool (Game::*CommandFunction)(const std::vector<std::string>&);
 	typedef std::map<std::string, CommandFunction> CommandMap;
 
 	// Methods
-	static Game* Get();
-	
+
 	Game();
+	
+	static Game* Instance();
+
 	void Run();
 	Actor* GetPlayer() const;
+	Room* GetCurrentRoom() const;
 	bool IsRunning() const;
 
 	// Commands
-
-	bool SaveGame(const std::string& fileName);
-	bool LoadGame(const std::string& fileName);
-	bool Quit(const std::string& s);
+	bool SaveGame(const std::vector<std::string>& command);
+	bool LoadGame(const std::vector<std::string>& command);
+	bool Quit(const std::vector<std::string>& command);
+	bool Help(const std::vector<std::string>& command);
 
 protected:
 
@@ -42,18 +46,21 @@ protected:
 private:
 
 	// Command map
-
-	bool ValidCommand(const std::string& command);
+	std::vector<std::string> ParseCommand() const;
+	bool IsValidCommand(const std::string& command) const;
+	bool Execute(const std::string& c, std::vector<std::string>& command);
 
 	static const CommandMap _commandMap;
 	static CommandMap MakeCommandMap();
 
 	static const std::string _gameFilePath;
+	static const std::string _savePath;
 	static Game* _instance;
-	bool _isRunning;
-	std::vector<std::unique_ptr<Environment>> _environments;
 
+	bool _isRunning;
+	std::vector<std::unique_ptr<Room>> _rooms;
 	Actor* _player;
+	Room* _currentRoom;
 
 };
 }
