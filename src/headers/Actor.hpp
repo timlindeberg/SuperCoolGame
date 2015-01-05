@@ -5,13 +5,14 @@
 #include <typeinfo>
 
 #include "IO.hpp"
+#include "Commandable.hpp"
 #include "Format.hpp"
 #include "Item.hpp"
 
 namespace Lab3{
 
 class Room;
-class Actor : public IO {
+class Actor : public IO, public Commandable {
 
 public:
 
@@ -29,6 +30,7 @@ public:
 	virtual bool Drop(const std::vector<std::string>& command);
 	virtual bool TalkTo(const std::vector<std::string>& command);
 	virtual bool Use(const std::vector<std::string>& command);
+	virtual bool Inventory(const std::vector<std::string>& command);
 
 protected:
 
@@ -36,6 +38,8 @@ protected:
 	virtual void LoadImplementation(std::istream& os) override;
 
 private:
+
+	virtual void InitCommandMap() override;
 
 	Room* _location;
 	std::vector<std::unique_ptr<Item>> _items;

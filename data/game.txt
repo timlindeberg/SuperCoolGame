@@ -8,7 +8,13 @@
 [ Room room2
 	" You are standing in a bright room. "
 	{ }
-	{ }
+	{ [ Item sword 10 5 ] }
 	{ South|room1 }
+] ,
+[ Room room3
+	" You are standing in a medium bright room. "
+	{ }
+	{ }
+	{ East|room1 }
 ]
 }

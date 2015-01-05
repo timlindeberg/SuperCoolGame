@@ -6,13 +6,15 @@ Game* Game::_instance = nullptr;
 const std::string Game::_gameFilePath = "./data/game.txt";
 const std::string Game::_savePath = "./saves/";
 
-const Game::CommandMap Game::_commandMap(Game::MakeCommandMap());
-
-Game::CommandMap Game::MakeCommandMap() {
-	_commandMap["save"] = std::bind(&Game::SaveGame, this);
-	_commandMap["load"] = &Game::LoadGame;
-	_commandMap["quit"] = &Game::Quit;
-	_commandMap["help"] = &Game::Help;
+void Game::InitCommandMap() {
+	#define ENTRY(name, func) _commandMap[name] = std::bind(&Game::func, this, std::placeholders::_1)
+	
+	ENTRY("save", SaveGame);
+	ENTRY("load", LoadGame);
+	ENTRY("quit", Quit);
+	ENTRY("help", Help);
+	
+	#undef ENTRY
 }
 
 // Singleton accessor
@@ -28,7 +30,7 @@ Actor* Game::GetPlayer() const {
 }
 
 Game::Game() {
-	MakeCommandMap();
+	InitCommandMap();
 	std::string file = Utils::FileToString(_gameFilePath);
 	Utils::Replace(file, '\n', ' ');
 	Utils::Replace(file, '\t', ' ');
@@ -38,24 +40,25 @@ Game::Game() {
 }
 
 void Game::Run(){
+	
+
 	_isRunning = true;
 	while(_isRunning){
-		std::cout << *(GetPlayer()->Location()) << std::endl;
+		std::cout << *(GetPlayer()->Location());
 		bool success = false;
-		while(!success){
-			std::cout << STYLE(COLOR("> ", MAGENTA), BOLD);
+		while(!success && _isRunning){
 			std::vector<std::string> command = ParseCommand();
 			if(command.size() == 0) continue;
 
 			std::string c = command[0];
-			if(IsValidCommand(c)){
-				command.erase(command.begin());
-				success = Execute(c, command);
-			}else{
+			if(Execute(this, c, command)) continue;
+			success = Execute(GetPlayer(), c, command);
+			if(!success){
 				std::cout << COLOR(command[0], RED) << " is not a valid command! Type " << 
 				COLOR("help", YELLOW) << " to see a list of valid commands." << std::endl;
 			}
 		}
+
 		for(auto& room : _rooms)
 			room->Update();
 	}
@@ -63,14 +66,24 @@ void Game::Run(){
 }
 
 std::vector<std::string> Game::ParseCommand() const {
+	static std::string under = "____________________________________________________";
+	static std::string over  = "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾";
+	std::cout << STYLE(COLOR(under, MAGENTA), BOLD) << std::endl;
+	std::cout << STYLE(COLOR("> ", MAGENTA), BOLD);
 	std::string command;
 	std::getline(std::cin, command);
+	std::cout << STYLE(COLOR(over, MAGENTA), BOLD) << std::endl;
 	Utils::ToLowerCase(command);
+	Utils::Trim(command);
 	return Utils::Split(command);
 } 
 
-bool Game::Execute(const std::string& c, std::vector<std::string>& command){
-	return (this->*_commandMap.at(c))(command);
+bool Game::Execute(Commandable* commandable, const std::string& c, std::vector<std::string>& command){
+	if(commandable->IsValidCommand(c)){
+		command.erase(command.begin());
+		return commandable->GetCommandMap().at(c)(command);
+	}
+	return false;
 }
 
 bool Game::IsValidCommand(const std::string& command) const {
@@ -83,7 +96,7 @@ bool Game::IsValidCommand(const std::string& command) const {
 
 bool Game::LoadGame(const std::vector<std::string>& command){
 	if(command.size() == 0){
-		std::cout << COLOR("load", YELLOW) << "-command needs to be followed by a filename!" << std::endl;
+		std::cout << COLOR("load", YELLOW) << " needs to be followed by a filename!" << std::endl;
 		return false;
 	}
 	std::string file = Utils::FileToString(_savePath + command[0]);
@@ -102,7 +115,7 @@ bool Game::LoadGame(const std::vector<std::string>& command){
 
 bool Game::SaveGame(const std::vector<std::string>& command) {
 	if(command.size() == 0){
-		std::cout << COLOR("save", YELLOW) << "-command needs to be followed by a filename!" << std::endl;
+		std::cout << COLOR("save", YELLOW) << " needs to be followed by a filename!" << std::endl;
 		return false;
 	}
 	std::ofstream file(_savePath + command[0]);
@@ -124,7 +137,9 @@ bool Game::Help(const std::vector<std::string>& command){
 	if(command.size() == 0){
 		std::cout << "The following commands can be used: " << std::endl;
 		std::vector<std::string> commands;
-		for(auto iter : _commandMap)
+		for(auto iter : this->GetCommandMap())
+			commands.push_back(iter.first);
+		for(auto iter : GetPlayer()->GetCommandMap())
 			commands.push_back(iter.first);
 
 		std::sort(commands.begin(), commands.end());

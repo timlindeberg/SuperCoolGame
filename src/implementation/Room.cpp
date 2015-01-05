@@ -34,8 +34,10 @@ std::vector<std::string> Room::Directions() const {
 }
 
 Room* Room::Neighbour(const std::string& direction) const {
+	std::string d = direction;
+	d[0] = std::toupper(d[0]);
 	try{
-		return _exits.at(direction);
+		return _exits.at(d);
 	}catch(std::out_of_range& e){
 		return nullptr;
 	}
@@ -132,11 +134,8 @@ void Room::SetUpExits(const std::vector<std::unique_ptr<Room>>& environments) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Lab3::Room& env) {
-	static std::string under = "____________________________________________________";
-	static std::string over  = "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾";
 	static std::initializer_list<Format::Code> listColors = {Format::BLUE, Format::CYAN };
 
-	std::cout << STYLE(COLOR(over, MAGENTA), BOLD) << std::endl;
 	os << env._description << std::endl;
 	if(env._actors.size() > 1){
 		os << std::endl;
@@ -163,7 +162,6 @@ std::ostream& operator<<(std::ostream& os, const Lab3::Room& env) {
 		os << STYLE("Exits:", BOLD) << std::endl;
 		Utils::PrintListInColors(os, env.Directions(), listColors);
 	}
-	std::cout << STYLE(COLOR(under, MAGENTA), BOLD) << std::endl;
 	return os;
 }
 

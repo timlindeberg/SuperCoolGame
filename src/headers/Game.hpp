@@ -8,20 +8,18 @@
 #include <string>
 
 #include "IO.hpp"
+#include "Commandable.hpp"
 #include "Item.hpp"
 #include "Room.hpp"
 #include "Actor.hpp"
 
 namespace Lab3{
 
-class Game : public IO {
+class Game : public IO, public Commandable {
 	
 public:
-
-	typedef bool (Game::*CommandFunction)(const std::vector<std::string>&);
+	typedef std::function<bool(const std::vector<std::string>&)> CommandFunction;
 	typedef std::map<std::string, CommandFunction> CommandMap;
-
-	// Methods
 
 	Game();
 	
@@ -45,13 +43,12 @@ protected:
 
 private:
 
+	virtual void InitCommandMap() override;
+
 	// Command map
 	std::vector<std::string> ParseCommand() const;
 	bool IsValidCommand(const std::string& command) const;
-	bool Execute(const std::string& c, std::vector<std::string>& command);
-
-	static const CommandMap _commandMap;
-	static CommandMap MakeCommandMap();
+	bool Execute(Commandable* commandable, const std::string& c, std::vector<std::string>& command);
 
 	static const std::string _gameFilePath;
 	static const std::string _savePath;

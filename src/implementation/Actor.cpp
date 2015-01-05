@@ -5,7 +5,20 @@ namespace Lab3{
 
 IO_FACTORY_REGISTER_DEF(Actor);
 
-Actor::Actor() {}
+void Actor::InitCommandMap(){
+	#define ENTRY(name, func) _commandMap[name] = std::bind(&Actor::func, this, std::placeholders::_1)
+		
+		ENTRY("go", Go);
+		ENTRY("take", Take);
+		ENTRY("drop", Drop);
+		ENTRY("inventory", Inventory);
+	
+	#undef ENTRY
+}
+
+Actor::Actor() {
+	InitCommandMap();
+}
 
 Actor::Actor(std::string name) : IO(name) {}
 
@@ -57,6 +70,7 @@ bool Actor::Take(const std::vector<std::string>& command) {
 		return false;
 	}
 	AddItem(item);
+	std::cout << "You took " << COLOR(itemName, GREEN) << "." << std::endl;
 	return true;
 }
 
@@ -72,12 +86,22 @@ bool Actor::Use(const std::vector<std::string>& command){
 	return true;
 }
 
+bool Actor::Inventory(const std::vector<std::string>& command){
+	if(_items.size() == 0){
+		std::cout << "You have no items." << std::endl;
+	}else{
+		std::cout << "You have the following items:" << std::endl;
+		Utils::PrintListInColors(std::cout, _items, { Format::BLUE, Format::CYAN });
+	}
+	return true;
+}
+
 void Actor::SaveImplementation(std::ostream& os) const {
 	IO::PrintList(os, _items);
 }
 
 void Actor::LoadImplementation(std::istream& is) {
-
+	_items = IO::ParseList<Item>(is);
 }
 
 }
