@@ -17,6 +17,17 @@ void Utils::PrintListInColors(std::ostream& os, const std::vector<T>& container,
 	} 
 }
 
+template<typename T, typename Func>
+bool Utils::ExecuteOnMatch(const std::vector<T>& objects, const std::string& name, Func f){
+	for(const auto& item : objects){
+		if(Ptr(item)->Name() == name){
+			f(*(Ptr(item)));
+			return true;
+		}
+	}
+	return false;
+}
+
 template<class T>
 T* Utils::Ptr(const std::unique_ptr<T>& obj){
 	return obj.get();

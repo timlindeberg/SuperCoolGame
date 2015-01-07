@@ -68,6 +68,7 @@ public:
 
 	std::string Type() const;
 	std::string Name() const;
+	const std::string& Description() const;
 	void SetName(const std::string& name);
 
 	friend std::ostream& operator<<(std::ostream& os, const IO& saveable);
@@ -80,6 +81,8 @@ public:
 	static const char LIST_END;
 	static const char LIST_SEP; 
 	static const char MAP_SEP;
+	static const std::string UNDER;
+	static const std::string OVER;
 
 	static std::string ReadObject(std::istream& is);
 	static std::string ReadList(std::istream& is);
@@ -93,6 +96,7 @@ public:
 
 	template<class T>
 	static void PrintList(std::ostream& os, const std::vector<T>& list);
+	static void PrintDescription(std::ostream& os, const std::string description);
 
 protected:
 
@@ -100,6 +104,7 @@ protected:
 	virtual void LoadImplementation(std::istream& is) = 0;
 
 	std::string _name;
+	std::string _description;
 
 private:
 

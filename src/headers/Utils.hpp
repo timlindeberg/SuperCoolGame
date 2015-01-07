@@ -18,16 +18,22 @@ public:
 
 	// String utils
 	static std::vector<std::string> Split(const std::string& s, char delim = ' ');
+	static std::string Concatenate(const std::vector<std::string>& v);
 	static std::string& Trim(std::string& s);
 	static std::string FileToString(const std::string& fileName);
 	static std::string& Remove(std::string& s, char c);
 	static std::string& Replace(std::string& s, char before, char after);
 	static std::string& ToLowerCase(std::string& s);
+	static std::vector<std::string>& RemoveBlankWords(std::vector<std::string>& v);
+	static bool AllWhitespace(const std::string& s);
 
 	// Print utils
 	template<class T>
 	static void PrintListInColors(std::ostream& os, const std::vector<T>& container,
 	 	const std::initializer_list<Format::Code>& colors);
+
+	template<class T, typename Func>
+	static bool ExecuteOnMatch(const std::vector<T>& objects, const std::string& name, Func f);
 
 	// Misc
 	template<class T>
@@ -43,9 +49,6 @@ private:
 
 	static std::string& LeftTrim(std::string& s);
 	static std::string& RightTrim(std::string& s);
-
-
-
 
 };
 

@@ -1,4 +1,3 @@
-
 #ifndef LAB3__ENTITY
 #define LAB3__ENTITY
 

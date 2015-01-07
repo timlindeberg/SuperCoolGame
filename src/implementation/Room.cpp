@@ -7,8 +7,7 @@ namespace Lab3{
 IO_FACTORY_REGISTER_DEF(Room);
 
 Room::Room() {}
-
-Room::Room(std::string name) : IO(name), _exits(), _actors(), _items() {}
+Room::Room(const std::string& name) : IO(name) {}
 
 Room::~Room() {}
 
@@ -18,12 +17,12 @@ void Room::OnLeave(Actor* actor) {}
 
 void Room::Update() {}
 
-std::vector<std::unique_ptr<Actor>>& Room::GetActors() {
+std::vector<std::unique_ptr<Actor>>& Room::Actors() {
 	return _actors;
 }
 
-const std::string& Room::Description() const {
-	return _description;
+std::vector<std::unique_ptr<Item>>& Room::Items() {
+	return _items;
 }
 
 std::vector<std::string> Room::Directions() const {
@@ -83,10 +82,6 @@ void Room::Enter(std::unique_ptr<Actor>& actor) {
 // IO
 
 void Room::SaveImplementation(std::ostream& os) const {
-	os << IO::DESC_SIGN << ' ';
-	os << _description << ' ';
-	os << IO::DESC_SIGN << ' ';
-
 	IO::PrintList(os, _actors);
 	IO::PrintList(os, _items);
 	
@@ -103,7 +98,6 @@ void Room::SaveImplementation(std::ostream& os) const {
 }
 
 void Room::LoadImplementation(std::istream& is) {
-	_description = IO::ReadDescription(is);
 	_actors = IO::ParseList<Actor>(is);
 	for(auto& a : _actors){
 		a->SetLocation(this);
@@ -135,6 +129,8 @@ void Room::SetUpExits(const std::vector<std::unique_ptr<Room>>& environments) {
 
 std::ostream& operator<<(std::ostream& os, const Lab3::Room& env) {
 	static std::initializer_list<Format::Code> listColors = {Format::BLUE, Format::CYAN };
+	
+	os << COLOR(IO::OVER, CYAN) << std::endl;
 
 	os << env._description << std::endl;
 	if(env._actors.size() > 1){
@@ -162,6 +158,9 @@ std::ostream& operator<<(std::ostream& os, const Lab3::Room& env) {
 		os << STYLE("Exits:", BOLD) << std::endl;
 		Utils::PrintListInColors(os, env.Directions(), listColors);
 	}
+
+	os << COLOR(IO::UNDER, CYAN) << std::endl;
+
 	return os;
 }
 

@@ -6,21 +6,17 @@ namespace Lab3{
 IO_FACTORY_REGISTER_DEF(Actor);
 
 void Actor::InitCommandMap(){
-	#define ENTRY(name, func) _commandMap[name] = std::bind(&Actor::func, this, std::placeholders::_1)
-		
-		ENTRY("go", Go);
-		ENTRY("take", Take);
-		ENTRY("drop", Drop);
-		ENTRY("inventory", Inventory);
-	
-	#undef ENTRY
+		ENTRY(Actor, "go", 	   	  Go, 	   	 "Moves the player to the room in the given direction.");
+		ENTRY(Actor, "take", 	  Take, 	 "Takes the given item.");
+		ENTRY(Actor, "drop", 	  Drop, 	 "Drops the given item.");
+		ENTRY(Actor, "inventory", Inventory, "Prints a list of the players inventory.");
 }
 
 Actor::Actor() {
 	InitCommandMap();
 }
 
-Actor::Actor(std::string name) : IO(name) {}
+Actor::~Actor() {}
 
 void Actor::SetLocation(Room* room) {
 	_location = room;
@@ -42,58 +38,78 @@ Room* Actor::Location() const {
 // Commands
 //------------------------------------------------------------
 
-bool Actor::Go(const std::vector<std::string>& command) {
+Actor::Result Actor::Go(const std::vector<std::string>& command) {
+	std::stringstream ss;
+	bool goForward = false;
+
+	if(command.size() == 0){
+		ss << COLOR(direction, RED) << 
+			"You need to specify a direction. You can walk the following directions: " << std::endl;
+		Utils::PrintListInColors(ss, _location->Directions(), { Format::BLUE, Format::CYAN });
+		return Result(ss.str(), false);
+	}
+
 	std::string direction = command[0];
 	Room* nextRoom = _location->Neighbour(direction);
-	if(!nextRoom){
-		std::cout << COLOR(direction, RED) << 
-			" is not a valid direction. You can walk the following directions: " << std::endl;
-		for(auto& s : _location->Directions()){
-			std::cout << "\t" << COLOR(s, YELLOW);
-		}
-		return false;
-	}
-	std::unique_ptr<Actor> thisActor = _location->Leave(this);
-	nextRoom->Enter(thisActor);
-	_location = nextRoom;
-	return true;
-}
-
-bool Actor::Take(const std::vector<std::string>& command) {
-	std::string itemName;
-	for(auto& s : command)
-		itemName.append(s);
-	std::unique_ptr<Item> item = _location->RemoveItem(itemName);
-	if(!item){
-		std::cout << "There is no item called " << COLOR(itemName, RED) << 
-			" in this room!" << std::endl;
-		return false;
-	}
-	AddItem(item);
-	std::cout << "You took " << COLOR(itemName, GREEN) << "." << std::endl;
-	return true;
-}
-
-bool Actor::Drop(const std::vector<std::string>& command){
-	return true;
-}
-
-bool Actor::TalkTo(const std::vector<std::string>& command){
-	return true;
-}
-
-bool Actor::Use(const std::vector<std::string>& command){
-	return true;
-}
-
-bool Actor::Inventory(const std::vector<std::string>& command){
-	if(_items.size() == 0){
-		std::cout << "You have no items." << std::endl;
+	if(nextRoom){
+		std::unique_ptr<Actor> thisActor = _location->Leave(this);
+		nextRoom->Enter(thisActor);
+		_location = nextRoom;
+		goForward = true;
+		ss << "You went " << COLOR(direction, GREEN) << "." << std::endl;
 	}else{
-		std::cout << "You have the following items:" << std::endl;
-		Utils::PrintListInColors(std::cout, _items, { Format::BLUE, Format::CYAN });
+		ss << COLOR(direction, RED) << 
+			" is not a valid direction. You can walk the following directions: " << std::endl;
+		Utils::PrintListInColors(ss, _location->Directions(), { Format::BLUE, Format::CYAN });
 	}
-	return true;
+
+	return Result(ss.str(), goForward);
+}
+
+Actor::Result Actor::Take(const std::vector<std::string>& command) {
+	std::stringstream ss;
+	bool goForward = false;
+
+	if(command.size() == 0){
+		ss << "You need to specify what you want to take." << std::endl;
+		return Result(ss.str(), false);
+	}
+
+	std::string itemName = Utils::Concatenate(command);
+	std::unique_ptr<Item> item = _location->RemoveItem(itemName);
+	if(item){
+		AddItem(item);
+		ss << "You took " << COLOR(itemName, GREEN) << "." << std::endl;
+		goForward = true;
+	}else{
+		ss << "There is no item called " << COLOR(itemName, RED) << 
+			" in this room!" << std::endl;
+	}
+	
+	return Result(ss.str(), goForward);
+}
+
+Actor::Result Actor::Drop(const std::vector<std::string>& command){
+	return Result();
+}
+
+Actor::Result Actor::TalkTo(const std::vector<std::string>& command){
+	return Result();
+}
+
+Actor::Result Actor::Use(const std::vector<std::string>& command){
+	return Result();
+}
+
+Actor::Result Actor::Inventory(const std::vector<std::string>& command){
+	std::stringstream ss;
+	if(_items.size() == 0){
+		ss << "You have no items." << std::endl;
+	}else{
+		ss << "You have the following items:" << std::endl;
+		Utils::PrintListInColors(ss, _items, { Format::BLUE, Format::CYAN });
+	}
+	return Result(ss.str(), false);
 }
 
 void Actor::SaveImplementation(std::ostream& os) const {

@@ -6,19 +6,7 @@ IO_FACTORY_REGISTER_DEF(Item);
 
 Item::Item() {}
 
-Item::Item(std::string name) :
-	 	IO(name),
-	 	_price(-1), 
-	 	_weight(-1) 
-	{}
-
-Item::Item(std::string name, unsigned int price, unsigned int weight) :
-		 IO(name),
-		 _price(price),
-		 _weight(weight)
-	{}
-
-void Item::SaveImplementation(std::ostream& os) const{
+void Item::SaveImplementation(std::ostream& os) const {
 	os << _price  << ' '; 
 	os << _weight << ' '; 
 }

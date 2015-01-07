@@ -11,6 +11,8 @@ const char IO::LIST_START	= '{';
 const char IO::LIST_END		= '}';
 const char IO::LIST_SEP		= ',';
 const char IO::MAP_SEP		= '|';
+const std::string IO::UNDER	= "__________________________________________________________________________"; 
+const std::string IO::OVER 	= "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾";
 
 // Factory
 
@@ -35,7 +37,6 @@ typename IO::Factory::CreationMap* IO::Factory::GetMap(){
 // IO
 
 IO::IO() {}
-
 IO::IO(const std::string& name) : _name(name) {}
 
 IO::~IO() {}
@@ -50,8 +51,12 @@ std::string IO::Type() const{
 	return Utils::Split(tmp, ':')[2];
 }
 
-std::string IO::Name() const{
+std::string IO::Name() const {
 	return _name;
+}
+
+const std::string& IO::Description() const {
+	return _description;
 }
 
 void IO::SetName(const std::string& name){
@@ -101,16 +106,24 @@ std::string IO::ReadDescription(std::istream& is){
 	return ReadBetween(is, IO::DESC_SIGN, IO::DESC_SIGN);
 }
 
+void IO::PrintDescription(std::ostream& os, const std::string description){
+	os << IO::DESC_SIGN << ' ';
+	os << description << ' ';
+	os << IO::DESC_SIGN << ' ';
+}
+
 std::ostream& operator<<(std::ostream& os, const Lab3::IO& object){
 	os << IO::OBJECT_START << ' ';
 	os << object.Type() << ' ';
 	os << object._name << ' ';
+	IO::PrintDescription(os, object._description);
 	object.SaveImplementation(os);
 	os << IO::OBJECT_END;
 	return os;
 }
 
 std::istream& operator>>(std::istream& is, Lab3::IO& object){
+	object._description = IO::ReadDescription(is);
 	object.LoadImplementation(is);
 	return is;
 }

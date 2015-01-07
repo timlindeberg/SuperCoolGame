@@ -23,15 +23,16 @@ public:
 	// Constructors
 
 	Room();
-	Room(std::string name);
+	Room(const std::string& name);
 	virtual ~Room();
 
 	// Methods
 
-	const std::string& Description() const;
-	void PrintDirections() const;
 	std::vector<std::string> Directions() const;
 	Room* Neighbour(const std::string& direction) const;
+
+	std::vector<std::unique_ptr<Item>>& Items();
+	std::vector<std::unique_ptr<Actor>>& Actors();
 
 	void AddItem(std::unique_ptr<Item>& item);
 	std::unique_ptr<Item> RemoveItem(const std::string& item);
@@ -45,7 +46,6 @@ public:
 	virtual void Update();
 
 
-	std::vector<std::unique_ptr<Actor>>& GetActors();
 	void AddExit(const std::string& dir, Room* e);
 	void SetUpExits(const std::vector<std::unique_ptr<Room>>& environments);
 	friend std::ostream& operator<<(std::ostream& os, const Room& env);
@@ -54,8 +54,6 @@ protected:
 
 	virtual void SaveImplementation(std::ostream& os) const override;
 	virtual void LoadImplementation(std::istream& is) override;
-
-	std::string _description;
 
 private:
 

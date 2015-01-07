@@ -17,22 +17,27 @@ class Actor : public IO, public Commandable {
 public:
 
 	Actor();
-	Actor(std::string name);
-
+	virtual ~Actor();
+	
 	Room* Location() const;
 	void SetLocation(Room* room);
+	
 	std::vector<std::unique_ptr<Item>>& Items();
 	void AddItem(std::unique_ptr<Item>& item);
-	
+	std::unique_ptr<Item> RemoveItem(const std::string& item);
+
 	// Commands
-	virtual bool Go(const std::vector<std::string>& command);
-	virtual bool Take(const std::vector<std::string>& command);
-	virtual bool Drop(const std::vector<std::string>& command);
-	virtual bool TalkTo(const std::vector<std::string>& command);
-	virtual bool Use(const std::vector<std::string>& command);
-	virtual bool Inventory(const std::vector<std::string>& command);
+	virtual Result Go(const std::vector<std::string>& command);
+	virtual Result Take(const std::vector<std::string>& command);
+	virtual Result Drop(const std::vector<std::string>& command);
+	virtual Result TalkTo(const std::vector<std::string>& command);
+	virtual Result Use(const std::vector<std::string>& command);
+	virtual Result Inventory(const std::vector<std::string>& command);
 
 protected:
+
+	Room* _location;
+	std::vector<std::unique_ptr<Item>> _items;
 
 	virtual void SaveImplementation(std::ostream& os) const override;
 	virtual void LoadImplementation(std::istream& os) override;
@@ -40,9 +45,6 @@ protected:
 private:
 
 	virtual void InitCommandMap() override;
-
-	Room* _location;
-	std::vector<std::unique_ptr<Item>> _items;
 
 	IO_FACTORY_REGISTER_DECL(Actor);
 };

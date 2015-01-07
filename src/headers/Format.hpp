@@ -5,9 +5,9 @@
 #include <sstream>
 #include <cstdarg>
 
-#define COLOR(output, code) Format::code << output << Format::FG_DEFAULT
-#define BG_COLOR(output, code) Format::BG_code << output << Format::BG_DEFAULT
-#define STYLE(output, code) Format::code << output << Format::RESET
+#define COLOR(output, code)     Format::code    << output << Format::FG_DEFAULT
+#define BG_COLOR(output, code)  Format::BG_code << output << Format::BG_DEFAULT
+#define STYLE(output, code)     Format::code    << output << Format::RESET
 
 namespace Format {
     enum Code {

@@ -10,6 +10,16 @@ std::vector<std::string> Utils::Split(const std::string& s, char delim){
 	return v;
 }
 
+std::string Utils::Concatenate(const std::vector<std::string>& v){
+	std::stringstream ss;
+	for(auto& s : v){
+		ss << s << ' ';
+	}
+	std::string s = ss.str();
+	return Trim(s);
+}
+
+
 std::string& Utils::Trim(std::string& s) {
     return LeftTrim(RightTrim(s));
 }
@@ -46,3 +56,27 @@ std::string& Utils::ToLowerCase(std::string& s){
 	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 	return s;
 }
+
+std::vector<std::string>& Utils::RemoveBlankWords(std::vector<std::string>& v){
+	for(auto it = v.begin(); it != v.end();) {
+	    if (Utils::AllWhitespace(*it))
+	        it = v.erase(it);
+	    else
+	    	++it;
+	}
+	return v;
+}
+
+
+bool Utils::AllWhitespace(const std::string& s){
+	if(s == "")
+		return true;
+	
+	for(char c : s){
+		if(c != ' '){
+			return false;
+		}
+	}
+	return true;
+}
+

@@ -18,8 +18,6 @@ namespace Lab3{
 class Game : public IO, public Commandable {
 	
 public:
-	typedef std::function<bool(const std::vector<std::string>&)> CommandFunction;
-	typedef std::map<std::string, CommandFunction> CommandMap;
 
 	Game();
 	
@@ -31,10 +29,11 @@ public:
 	bool IsRunning() const;
 
 	// Commands
-	bool SaveGame(const std::vector<std::string>& command);
-	bool LoadGame(const std::vector<std::string>& command);
-	bool Quit(const std::vector<std::string>& command);
-	bool Help(const std::vector<std::string>& command);
+	Result SaveGame(const std::vector<std::string>& command);
+	Result LoadGame(const std::vector<std::string>& command);
+	Result Quit(const std::vector<std::string>& command);
+	Result Help(const std::vector<std::string>& command);
+	Result Inspect(const std::vector<std::string>& command);
 
 protected:
 
@@ -43,12 +42,13 @@ protected:
 
 private:
 
+	bool TryCommands(Commandable* commandable,
+	 	std::vector<std::string>& words, bool& goForward);
+
 	virtual void InitCommandMap() override;
 
 	// Command map
 	std::vector<std::string> ParseCommand() const;
-	bool IsValidCommand(const std::string& command) const;
-	bool Execute(Commandable* commandable, const std::string& c, std::vector<std::string>& command);
 
 	static const std::string _gameFilePath;
 	static const std::string _savePath;
