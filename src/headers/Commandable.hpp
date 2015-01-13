@@ -7,48 +7,53 @@
 #include <string>
 
 #include "IO.hpp"
+#include "GameStream.hpp" 	
 
-#define ENTRY(type, name, func, description) { 						\
-		_commandMap[name] = Command( 				 			 	\
-			std::bind(&type::func, this, std::placeholders::_1), 	\
-			false); 									 		 	\
-		_descriptionMap[name] = description;					 	\
-	}
+#define ENTRY(type, name, func, state, desc) {										 \
+		Command c(std::bind(&type::func, this, std::placeholders::_1), state, desc); \
+		_commandMap[name].push_back(c);		 				 						 \
+		}
 
 namespace Lab3{
 
-enum State {
-	NORMAL 	= 0,
-	BATTLE 	= 1,
-	TRADE 	= 2
-};
+namespace State{
+	enum Value {
+		ALL 	= 0,
+		INTRO 	= 1,
+		NORMAL 	= 2,
+		BATTLE 	= 3
+	};	
+}
 
 class Commandable {	
 public:
 
 	struct Result {
 		bool goForward;
-		std::string message;
+		bool validCommand;
 
 		Result();
-		Result(const std::string& message, bool goForward);
-
-		bool HasMessage();
+		Result(bool goForward, bool validCommand);
 	};
 
-	struct Command;
-	typedef std::function<Result(const std::vector<std::string>&)> CommandFunction;
-	typedef std::map<std::string, Command> CommandMap;
-	typedef std::map<std::string, std::string> DescriptionMap;
+	class Command;
+	typedef std::function<bool(const std::vector<std::string>&)> CommandFunction;
+	typedef std::map<std::string, std::vector<Command>> CommandMap;
 
-	struct Command{
-		CommandFunction f;
-		bool movesGameForward;
+	class Command{
+	public:
 
-		Command();
-		Command(CommandFunction f, bool movesGameForward);
+		Command(CommandFunction f, State::Value state, const std::string& description);
 
-		Result operator()(const std::vector<std::string>& command) const;
+		bool operator()(const std::vector<std::string>& command) const;
+		bool UsableInState(State::Value state) const;
+		const std::string& Description() const;
+
+	private:
+
+		CommandFunction _f;
+		State::Value _usableState;
+		std::string _description;
 
 	};
 
@@ -56,15 +61,11 @@ public:
 
 	const CommandMap& GetCommandMap() const;
 	bool IsValidCommand(const std::string& command) const;
-	Result Execute(const std::string& c, std::vector<std::string>& command);
-	const std::string& CommandDescription(const std::string& command);
+	Result Execute(const std::string& command, std::vector<std::string>& words, State::Value currentState);
 
 protected:
 
-	
-
 	CommandMap _commandMap;
-	DescriptionMap _descriptionMap;
 
 private:
 	virtual void InitCommandMap() = 0;

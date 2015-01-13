@@ -1,6 +1,6 @@
 #include "Room.hpp"
 #include "Actor.hpp"
-
+#include "Game.hpp"
 
 namespace Lab3{
 
@@ -42,53 +42,60 @@ Room* Room::Neighbour(const std::string& direction) const {
 	}
 }
 
+bool Room::IsLocked(const std::string& direction) const {
+	std::string d = direction;
+	d[0] = std::toupper(d[0]);
+	return _locked.count(d);
+}
+
+const std::string& Room::RequiredKey(const std::string& direction) const {
+	std::string d = direction;
+	d[0] = std::toupper(d[0]);
+	return _locked.at(d);
+}
+
+void Room::Unlock(const std::string& direction){
+	std::string d = direction;
+	d[0] = std::toupper(d[0]);
+	_locked.erase(_locked.find(d));
+}
+
 void Room::AddItem(std::unique_ptr<Item>& item){
-	_items.push_back(std::move(item));
+	Utils::AddItem(_items, item);
 }
 
 std::unique_ptr<Item> Room::RemoveItem(const std::string& item) {
-	for(auto it = _items.begin(); it != _items.end(); ++it){
-		if((*it)->Name() == item){
-			std::unique_ptr<Item> ptr = std::move(*it);
-			_items.erase(it);
-			return ptr;
-		} 
-	}
-	return std::unique_ptr<Item>(nullptr);
+	return Utils::RemoveItem(_items, item);	
 }
 
 void Room::AddExit(const std::string& dir, Room* e) {
 	_exits[dir] = e;
 }
 
-std::unique_ptr<Actor> Room::Leave(Actor* actor) {
-	for(auto it = _actors.begin(); it != _actors.end(); ++it){
-		if(it->get() == actor){
-			std::unique_ptr<Actor> ptr = std::move(*it);
-			_actors.erase(it);
-			OnLeave(actor);
-			return ptr;
-		} 
-	}
-	return std::unique_ptr<Actor>(nullptr);
+std::unique_ptr<Actor> Room::RemoveActor(Actor* actor) {
+	return Utils::RemoveItem(_actors, actor->Name());
 }
 
-void Room::Enter(std::unique_ptr<Actor>& actor) {
-	_actors.push_back(std::move(actor));
-	OnEnter(actor.get());
+void Room::AddActor(std::unique_ptr<Actor>& actor) {
+	Utils::AddItem(_actors, actor);
 }
-
 
 // IO
 
 void Room::SaveImplementation(std::ostream& os) const {
+	os << _name << ' ';
+	IO::PrintDescription(os, _description);
 	IO::PrintList(os, _actors);
 	IO::PrintList(os, _items);
 	
 	os << IO::LIST_START << ' ';
 	size_t i = 0;
 	for(auto& iter : _exits){
-		os << iter.first << IO::MAP_SEP << iter.second->Name() << ' ';
+		os << iter.first << IO::MAP_SEP << iter.second->Name();
+		if(IsLocked(iter.first)){
+			os << IO::MAP_SEP << RequiredKey(iter.first);
+		}
+		os << ' ';
 		if(i < _exits.size() - 1){
 			os << IO::LIST_SEP << ' ';
 		}
@@ -103,8 +110,8 @@ void Room::LoadImplementation(std::istream& is) {
 		a->SetLocation(this);
 	}
 	_items = IO::ParseList<Item>(is);
+
 	// Create temporary placeholders so we can link the rooms together later
-	// Second list is the exits
 	std::string exitList = IO::ReadList(is);
 	for(const std::string& s : Utils::Split(exitList, ' ')){
 		if(s[0] == IO::LIST_SEP){
@@ -113,55 +120,63 @@ void Room::LoadImplementation(std::istream& is) {
 
 		std::vector<std::string> exit = Utils::Split(s, IO::MAP_SEP);
 		_exits[exit[0]] = new Room(exit[1]);
+		if(exit.size() == 3){
+			pr("DIRECTION: " << exit[0]);
+			pr("KEY: " << exit[2]);
+			_exits[exit[0]]->_locked[exit[0]] = exit[2];
+		}
 	}
 }
 
-void Room::SetUpExits(const std::vector<std::unique_ptr<Room>>& environments) {
+void Room::SetUpExits(const std::vector<std::unique_ptr<Room>>& rooms) {
 	for(auto& iter : _exits){
-		for(auto& e : environments){
-			if(iter.second->Name() == e->Name()){
-				delete iter.second;
-				iter.second = e.get();
+		for(auto& room : rooms){
+			Room*& tmpRoom = iter.second;
+			if(Utils::SameName(tmpRoom, room)){
+				const std::string& direction = iter.first;
+				if(tmpRoom->IsLocked(direction)){
+					_locked[direction] = tmpRoom->_locked[direction];
+				}
+				delete tmpRoom;
+				tmpRoom = room.get();
+				break;
 			}
 		}
 	}
 }
 
-std::ostream& operator<<(std::ostream& os, const Lab3::Room& env) {
-	static std::initializer_list<Format::Code> listColors = {Format::BLUE, Format::CYAN };
-	
-	os << COLOR(IO::OVER, CYAN) << std::endl;
+void Room::PrintDescription() const{
+	static const std::initializer_list<Format::Code> listColors = {Format::BLUE, Format::CYAN };
+	Lab3::out << BeginBox(GameStream::ROOM_COLOR);
 
-	os << env._description << std::endl;
-	if(env._actors.size() > 1){
-		os << std::endl;
-		os << STYLE("Characters in this room:", BOLD) << std::endl;
+	Lab3::out << _description << std::endl;
+	if(_actors.size() > 1){
+		Lab3::out << Delimiter();
+		Lab3::out << Alignment::CENTER << STYLE("Characters in this room", BOLD) << std::endl;
 		std::vector<Actor*> actors;
-		for(auto& a : env._actors){
+		for(auto& a : _actors){
 			Actor* actor = a.get();
 			if(dynamic_cast<Player*>(actor)) {   // Ignore player when printing
 				continue;
 			}
 			actors.push_back(actor);
 		}
-		Utils::PrintListInColors(os, actors, listColors);
+		Utils::PrintListInColors(Lab3::out, actors, listColors);
 	}
 
-	if(env._items.size() >= 1){
-		os << std::endl;
-		os << STYLE("Items in this room:", BOLD) << std::endl;
-		Utils::PrintListInColors(os, env._items, listColors);
+	if(_items.size() >= 1){
+		Lab3::out << Delimiter();
+		Lab3::out << Alignment::CENTER << STYLE("Items in this room", BOLD) << std::endl;
+		Utils::PrintListInColors(Lab3::out, _items, listColors);
 	}
 
-	if(env._exits.size() >= 1){
-		os << std::endl;
-		os << STYLE("Exits:", BOLD) << std::endl;
-		Utils::PrintListInColors(os, env.Directions(), listColors);
+	if(_exits.size() >= 1){
+		Lab3::out << Delimiter();
+		Lab3::out << Alignment::CENTER << STYLE("Exits", BOLD) << std::endl;
+		Utils::PrintListInColors(Lab3::out, Directions(), listColors);
 	}
 
-	os << COLOR(IO::UNDER, CYAN) << std::endl;
-
-	return os;
+	Lab3::out << EndBox();
 }
 
 }

@@ -11,8 +11,7 @@ const char IO::LIST_START	= '{';
 const char IO::LIST_END		= '}';
 const char IO::LIST_SEP		= ',';
 const char IO::MAP_SEP		= '|';
-const std::string IO::UNDER	= "__________________________________________________________________________"; 
-const std::string IO::OVER 	= "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾";
+
 
 // Factory
 
@@ -65,21 +64,23 @@ void IO::SetName(const std::string& name){
 
 std::string IO::ReadBetween(std::istream& is, char startSign, char endSign){
 	std::string tmp;
-	is >> tmp;
-	if(tmp[0] != startSign){
-		throw std::invalid_argument("Could not read object, missing start sign");
-	}
-
+    is >> tmp;
+    prn(tmp);
+    if(tmp[0] != startSign){
+        throw std::invalid_argument("Could not read object, missing start sign");
+    }
 	size_t numStarts = 1;
 	std::stringstream ss;
 	while(numStarts != 0){
 		if(!(is >> tmp)){
-			throw std::invalid_argument("Could not parse object, missing end sign");
+			std::string error = "Could not parse object, missing end sign:";
+			error.append(1, endSign);
+			throw std::invalid_argument(error);
 		}
-		if(tmp == " "){
-			// Ignore multiple spaces
+
+		if(tmp == " ")
 			continue;
-		}
+
 		char c = tmp[0];
 		if(c == endSign)
 			--numStarts;
@@ -87,7 +88,8 @@ std::string IO::ReadBetween(std::istream& is, char startSign, char endSign){
 			++numStarts;
 
 		if(numStarts != 0){
-			ss << tmp << ' ';			
+			ss << ' ';
+			ss << tmp;			
 		}
 	}
 	std::string result = ss.str();
@@ -95,35 +97,44 @@ std::string IO::ReadBetween(std::istream& is, char startSign, char endSign){
 }
 
 std::string IO::ReadObject(std::istream& is){
+	pr("Reading object.");
 	return ReadBetween(is, IO::OBJECT_START, IO::OBJECT_END);
 }
 
 std::string IO::ReadList(std::istream& is){
+	pr("Reading list.");
 	return ReadBetween(is, IO::LIST_START, IO::LIST_END);
 }
 
 std::string IO::ReadDescription(std::istream& is){
-	return ReadBetween(is, IO::DESC_SIGN, IO::DESC_SIGN);
+	pr("Reading description.");
+	char c;
+	is >> c;
+	if(c != '"'){
+		throw std::invalid_argument("Could not read description of, missing start sign : '\"'");
+	}
+	std::string description;
+	std::getline(is, description, '"');
+	pr("\tResult: " << description);
+	return Utils::Trim(description);
 }
 
 void IO::PrintDescription(std::ostream& os, const std::string description){
-	os << IO::DESC_SIGN << ' ';
-	os << description << ' ';
+	os << IO::DESC_SIGN;
+	os << description;
 	os << IO::DESC_SIGN << ' ';
 }
 
 std::ostream& operator<<(std::ostream& os, const Lab3::IO& object){
 	os << IO::OBJECT_START << ' ';
 	os << object.Type() << ' ';
-	os << object._name << ' ';
-	IO::PrintDescription(os, object._description);
 	object.SaveImplementation(os);
 	os << IO::OBJECT_END;
 	return os;
 }
 
 std::istream& operator>>(std::istream& is, Lab3::IO& object){
-	object._description = IO::ReadDescription(is);
+	pr("Loading object: " << object.Name());
 	object.LoadImplementation(is);
 	return is;
 }

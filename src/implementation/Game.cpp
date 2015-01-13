@@ -1,17 +1,25 @@
 #include "Game.hpp"
+#include "Room.hpp"
+#include "Player.hpp"
 
 namespace Lab3{
 
 Game* Game::_instance = nullptr;
-const std::string Game::_gameFilePath = "./data/game.txt";
+const std::string Game::_gameFilePath = "./data/game.save";
 const std::string Game::_savePath = "./saves/";
+const std::string Game::_saveExtension = ".save";
 
 void Game::InitCommandMap() {
-	ENTRY(Game, "save", 	SaveGame, "Saves the game to the specified file.");
-	ENTRY(Game, "load", 	LoadGame, "Loads the game from the specified file.");
-	ENTRY(Game, "quit", 	Quit, 	  "Exits the game.");
-	ENTRY(Game, "help", 	Help, 	  "Prints helpful information.");
-	ENTRY(Game, "inspect", 	Inspect,  "Prints a description of an element in the world.");
+	using namespace State;
+	#define G_ENTRY(name, f, state, desc) ENTRY(Game, name, f, state, desc);
+
+	G_ENTRY("new",  NewGame,  INTRO,  "Starts a new game."					 	);
+	G_ENTRY("save", SaveGame, NORMAL, "Saves the game to the specified file." 	);
+	G_ENTRY("load", LoadGame, NORMAL, "Loads the game from the specified file." );
+	G_ENTRY("load", LoadGame, INTRO,  "Loads the game from the specified file." );
+	G_ENTRY("quit", Quit, 	  ALL,	  "Exits the game." 						);
+
+	#undef G_ENTRY
 }
 
 // Singleton accessor
@@ -22,172 +30,156 @@ Game* Game::Instance(){
 	return Game::_instance;
 }
 
-Actor* Game::GetPlayer() const {
+
+bool Game::IsRunning() const {
+	return _isRunning;
+}
+
+Player* Game::GetPlayer() const {
 	return _player;
+}
+
+State::Value Game::State() const {
+	return _currentState;
 }
 
 Game::Game() {
 	InitCommandMap();
-	std::string file = Utils::FileToString(_gameFilePath);
-	Utils::Replace(file, '\n', ' ');
-	Utils::Replace(file, '\t', ' ');
-	std::stringstream ss(file);
-	LoadImplementation(ss);
+	_player = nullptr;
 }
 
 void Game::Run() {
 	_isRunning = true;
+	Introduction();
+	if(!_isRunning) return;
+
+	Parser parser;
+	CommandExecutor commandExecutor(State::NORMAL, { this, GetPlayer() });
+	GetPlayer()->Location()->PrintDescription();
 	while(_isRunning){
-		std::cout << *(GetPlayer()->Location());
-		bool goForward = false;
-		while(!goForward){
-			std::vector<std::string> words = ParseCommand();
-			if(words.size() == 0) continue;
+		std::vector<std::string> command = parser.ParseCommand();
 
-			std::string c = words[0];
-			bool success = TryCommands(this, words, goForward) ||
-						   TryCommands(GetPlayer(), words, goForward);
-
-			if(!success){
-				std::cout << COLOR(IO::OVER, CYAN) << std::endl;
-				std::cout << COLOR(c, RED) << " is not a valid command! Type " <<
-				COLOR("help", YELLOW) << " to see a list of valid commands." << std::endl;
-				std::cout << COLOR(IO::UNDER, CYAN) << std::endl;
-			}
+		commandExecutor.Execute(command);
+		if(_isRunning){
+			GetPlayer()->Location()->PrintDescription();
+			for(auto& room : _rooms)
+				room->Update();
 		}
-		for(auto& room : _rooms)
-			room->Update();
 	}
 }
 
-bool Game::TryCommands(Commandable* commandable, std::vector<std::string>& words, bool& goForward){
-	std::string c = words[0];
-	Result result = commandable->Execute(c, words);
-	if(result.HasMessage()){
-		std::cout << COLOR(IO::OVER, CYAN) << std::endl;
-		std::cout << result.message;
-		std::cout << COLOR(IO::UNDER, CYAN) << std::endl;
-		goForward = result.goForward;
-		return true;
+
+void Game::Introduction(){
+	// static std::regex regex("(\033\\[(\\d*)m)");
+	// static std::string compare = "\033";
+	// static std::string empty;
+	// std::stringstream ss;
+	// ss << "Type " << COLOR("new", YELLOW) << " to start a new game " <<
+	// 	"or type " << COLOR("load", YELLOW) << " <gamefile> to load a game!" << std::endl;
+
+	// std::string word = ss.str();
+	// std::string ansiremoved;
+	// std::smatch sm;
+	// std::sregex_token_iterator begin(word.begin(), word.end(), regex, 1	);
+	// std::sregex_token_iterator end;
+	// for(; begin != end; ++begin){
+	// 	std::cout << "[" <<  begin->first - word.begin() << ", " << begin->second - word.begin() << "]" <<std::endl;
+	// 	//Format::Code color = static_cast<Format::Code>(std::stoi((*begin).str()));
+	// 	//std::cout << color << "color" << Format::FG_DEFAULT << std::endl;
+
+	// }
+	// if(word.find(compare) != std::string::npos){
+	// 	std::regex_search(word, sm, regex);
+	// 	ansiremoved = std::regex_replace(word, regex, empty);
+	// }
+	
+	// size_t pos = sm.position(0);
+	// size_t length = sm.length(0);
+	// //pr("[" << pos << ", " << pos + length << "]: " << sm[0].str());	
+
+	// INTRO TEXTs
+	Lab3::out << BeginBox(Format::CYAN);
+	Lab3::out << Alignment::CENTER << "Welcome to Super cool game! " << std::endl;
+	Lab3::out << Delimiter();
+	Lab3::out << "Type " << COLOR("new", YELLOW) << " to start a new game " <<
+		"or type " << COLOR("load", YELLOW) << " <gamefile> to load a game!" << std::endl;
+	Lab3::out << "You can always type " << COLOR("help", YELLOW) << 
+		" if you are unsure which commands can be used!" << std::endl;
+	Lab3::out << EndBox();
+
+	Parser parser;
+	CommandExecutor commandExecutor(State::INTRO, this); 
+	bool success = false;
+
+	while(!success){
+		std::vector<std::string> command = parser.ParseCommand();
+		success = commandExecutor.Execute(command);
 	}
-	return false;
 }
-
-std::vector<std::string> Game::ParseCommand() const {
-	std::string command;
-
-	std::cout << STYLE(COLOR(IO::UNDER, MAGENTA), BOLD) << std::endl;
-	std::cout << STYLE(COLOR("> ", MAGENTA), BOLD);
-
-	std::getline(std::cin, command);
-
-	std::cout << STYLE(COLOR(IO::OVER, MAGENTA), BOLD) << std::endl;
-
-	Utils::ToLowerCase(command);
-	std::vector<std::string> words = Utils::Split(command);
-	return Utils::RemoveBlankWords(words);
-} 
 
 //---------------------------------------
 // Commands
 //---------------------------------------
 
-Actor::Result Game::LoadGame(const std::vector<std::string>& command){
-	std::stringstream ss;
-	bool goForward = false;
+bool Game::NewGame(const std::vector<std::string>& command){
+	std::string file = Utils::FileToString(_gameFilePath);
+	Utils::Replace(file, '\n', ' ');
+	Utils::Replace(file, '\t', ' ');
+	std::stringstream ss(file);
+	LoadImplementation(ss);
+	return true;
+}
+
+bool Game::LoadGame(const std::vector<std::string>& command){
 	if(command.size() == 0) {
-		ss << COLOR("load", YELLOW) << " needs to be followed by a filename!" << std::endl;
-		return Result(ss.str(), false);
+		PRINT_BOX(GameStream::FAIL_COLOR,
+		 	COLOR("load", YELLOW) << " needs to be followed by a filename!" << std::endl);
+		return false;
 	} 
 
-	std::string file = Utils::FileToString(_savePath + command[0]);
+	std::string file = Utils::FileToString(_savePath + command[0] + _saveExtension);
 	if(file.size() == 0) {
-		ss << "No file named " << COLOR(command[0], RED) << std::endl;
-	} else {
-		Utils::Replace(file, '\n', ' ');
-		Utils::Replace(file, '\t', ' ');
-		std::stringstream filess;
-		filess << file;
-		LoadImplementation(filess);
-		ss << "Loaded game from file " << COLOR(command[0], GREEN) << std::endl;
-		goForward = true;
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			"No file named " << COLOR(command[0], RED) << std::endl);
+		return false;
 	}
-	return Result(ss.str(), goForward);
+	Utils::Replace(file, '\n', ' ');
+	Utils::Replace(file, '\t', ' ');
+	std::stringstream ss;
+	ss << file;
+	LoadImplementation(ss);
+	PRINT_BOX(GameStream::SUCCESS_COLOR, 
+		"Loaded game from file " << COLOR(command[0], GREEN) << std::endl);
+
+	return true;
 }
 
-Actor::Result Game::SaveGame(const std::vector<std::string>& command) {
-	std::stringstream ss;
+bool Game::SaveGame(const std::vector<std::string>& command) {
 	if(command.size() == 0){
-		ss << COLOR("save", YELLOW) << " needs to be followed by a filename!" << std::endl;
-		return Result(ss.str(), false);
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			COLOR("save", YELLOW) << " needs to be followed by a filename!" << std::endl);
+		return false;
+	}
+	std::string fileName = Utils::Concatenate(command);
+	std::ofstream file(_savePath + fileName + _saveExtension);
+	if(file.is_open()){
+		SaveImplementation(file);
+		file.close();
+		PRINT_BOX(GameStream::SUCCESS_COLOR,
+			"Saved game to file " << COLOR(fileName, GREEN) << std::endl);
 	}else{
-		std::ofstream file(_savePath + command[0]);
-		if(file.is_open()){
-			SaveImplementation(file);
-			file.close();
-			ss << "Saved game to file " << COLOR(command[0], GREEN) << std::endl;
-		}else{
-			ss << "Could not open file";
-		}
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			"Could not open file" << COLOR(fileName, RED) << std::endl);
 	}
 	
-	return Result(ss.str(), false);
+	return false;
 }
 
-Actor::Result Game::Quit(const std::vector<std::string>& command) {
-	std::stringstream ss;
-	ss << "Thanks for playing!" << std::endl;
+bool Game::Quit(const std::vector<std::string>& command) {
+	PRINT_BOX(GameStream::SUCCESS_COLOR,
+		"Thanks for playing!" << std::endl);
 	_isRunning = false;
-	return Result(ss.str(), true);
-}
-
-Actor::Result Game::Help(const std::vector<std::string>& command){
-	std::stringstream ss;
-	if(command.size() == 0){
-		ss << "The following commands can be used: " << std::endl;
-		std::vector<std::string> commands;
-		std::initializer_list<Commandable*> commandables = {this, GetPlayer()};
-		for(Commandable* commandable : commandables){
-			for(auto iter : commandable->GetCommandMap()){
-				std::stringstream commandss;
-				commandss << COLOR(iter.first, YELLOW) << " - ";
-				commandss << commandable->CommandDescription(iter.first);
-				commands.push_back(commandss.str());
-			}
-		}
-
-		std::sort(commands.begin(), commands.end());
-		for(auto& s : commands)
-			ss << "\t" << s << std::endl;
-	}
-	return Result(ss.str(), false);
-}
-
-Actor::Result Game::Inspect(const std::vector<std::string>& command){
-	std::stringstream ss;
-	if(command.size() == 0 || command[0] == "room"){
-		ss << *(GetPlayer()->Location());
-		return Result(ss.str(), false);
-	}
-
-	auto GetDescription = [&ss](const IO& object){
-		ss << object.Description() << std::endl;
-	};
-
-	std::string object = Utils::Concatenate(command);
-
-	Actor* player = GetPlayer();
-	Room* location = player->Location();
-	if(Utils::ExecuteOnMatch(player->Items(),    object, GetDescription))
-		return Result(ss.str(), false); 
-	if(Utils::ExecuteOnMatch(location->Items(),  object, GetDescription))
-		return Result(ss.str(), false);    
-	if(Utils::ExecuteOnMatch(location->Actors(), object, GetDescription))
-		return Result(ss.str(), false); 
-		
-	ss << "There is nothing named " << COLOR(object, RED) << " here." << std::endl;
-	return Result(ss.str(), false);
-	
+	return true;
 }
 
 
@@ -195,16 +187,18 @@ Actor::Result Game::Inspect(const std::vector<std::string>& command){
 // Private
 //---------------------------------------
 
-bool Game::IsRunning() const {
-	return _isRunning;
-}
-
 void Game::SaveImplementation(std::ostream& os) const {
 	IO::PrintList(os, _rooms);
 }
 
 void Game::LoadImplementation(std::istream& is){
-	_rooms = IO::ParseList<Room>(is);
+	try{
+		_rooms = IO::ParseList<Room>(is);
+	}catch(std::invalid_argument& e){
+		std::cerr << COLOR(e.what(), RED) << std::endl;;	
+		_isRunning = false;
+		return;
+	}
 	bool playerFound = false;
 	for(auto& e : _rooms){
 		e->SetUpExits(_rooms);

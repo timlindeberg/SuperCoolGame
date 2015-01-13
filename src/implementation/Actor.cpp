@@ -5,16 +5,7 @@ namespace Lab3{
 
 IO_FACTORY_REGISTER_DEF(Actor);
 
-void Actor::InitCommandMap(){
-		ENTRY(Actor, "go", 	   	  Go, 	   	 "Moves the player to the room in the given direction.");
-		ENTRY(Actor, "take", 	  Take, 	 "Takes the given item.");
-		ENTRY(Actor, "drop", 	  Drop, 	 "Drops the given item.");
-		ENTRY(Actor, "inventory", Inventory, "Prints a list of the players inventory.");
-}
-
-Actor::Actor() {
-	InitCommandMap();
-}
+Actor::Actor() {}
 
 Actor::~Actor() {}
 
@@ -38,86 +29,127 @@ Room* Actor::Location() const {
 // Commands
 //------------------------------------------------------------
 
-Actor::Result Actor::Go(const std::vector<std::string>& command) {
-	std::stringstream ss;
-	bool goForward = false;
-
+bool Actor::Go(const std::vector<std::string>& command) {
 	if(command.size() == 0){
-		ss << COLOR(direction, RED) << 
-			"You need to specify a direction. You can walk the following directions: " << std::endl;
-		Utils::PrintListInColors(ss, _location->Directions(), { Format::BLUE, Format::CYAN });
-		return Result(ss.str(), false);
+		Lab3::out << BeginBox(GameStream::FAIL_COLOR);
+		Lab3::out << "You need to specify a direction. You can walk the following directions" << std::endl;
+		Lab3::out << Delimiter();
+		Utils::PrintListInColors(Lab3::out, _location->Directions(), { Format::BLUE, Format::CYAN });
+		Lab3::out << EndBox();
+		return false;
 	}
 
-	std::string direction = command[0];
+	std::string direction = Utils::Concatenate(command);
+
 	Room* nextRoom = _location->Neighbour(direction);
-	if(nextRoom){
-		std::unique_ptr<Actor> thisActor = _location->Leave(this);
-		nextRoom->Enter(thisActor);
-		_location = nextRoom;
-		goForward = true;
-		ss << "You went " << COLOR(direction, GREEN) << "." << std::endl;
-	}else{
-		ss << COLOR(direction, RED) << 
-			" is not a valid direction. You can walk the following directions: " << std::endl;
-		Utils::PrintListInColors(ss, _location->Directions(), { Format::BLUE, Format::CYAN });
+	if(!nextRoom){
+		Lab3::out << BeginBox(GameStream::FAIL_COLOR);
+		Lab3::out << COLOR(direction, RED) << 
+			" is not a valid direction. You can walk the following directions" << std::endl;
+		Lab3::out << Delimiter();
+		Utils::PrintListInColors(Lab3::out, _location->Directions(), { Format::BLUE, Format::CYAN });
+		Lab3::out << EndBox();
+		return false;
 	}
 
-	return Result(ss.str(), goForward);
+	if(_location->IsLocked(direction)){
+		bool hasKey = false;
+		for(auto& item : _items){
+			if(Utils::SameName(item, _location->RequiredKey(direction))){
+				hasKey = true;
+				_location->Unlock(direction);
+				PRINT_BOX(GameStream::SUCCESS_COLOR,
+					"You unlocked the door using " << COLOR(item->Name(), BLUE) << "." << std::endl);
+				break;
+			}
+		}
+
+		if(!hasKey){
+			PRINT_BOX(GameStream::FAIL_COLOR, 
+				"You can't walk " << COLOR(direction, RED) << ", the door is locked!" << std::endl);
+			return false;
+		}
+		
+	}
+
+	std::unique_ptr<Actor> thisActor = _location->RemoveActor(this);
+	nextRoom->AddActor(thisActor);
+	_location = nextRoom;
+	PRINT_BOX(GameStream::SUCCESS_COLOR,
+		"You went " << COLOR(direction, GREEN) << "." << std::endl);
+	return true;
 }
 
-Actor::Result Actor::Take(const std::vector<std::string>& command) {
-	std::stringstream ss;
-	bool goForward = false;
-
+bool Actor::Take(const std::vector<std::string>& command) {
 	if(command.size() == 0){
-		ss << "You need to specify what you want to take." << std::endl;
-		return Result(ss.str(), false);
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			"You need to specify what you want to take." << std::endl);
+		return false;
 	}
 
 	std::string itemName = Utils::Concatenate(command);
 	std::unique_ptr<Item> item = _location->RemoveItem(itemName);
-	if(item){
-		AddItem(item);
-		ss << "You took " << COLOR(itemName, GREEN) << "." << std::endl;
-		goForward = true;
-	}else{
-		ss << "There is no item called " << COLOR(itemName, RED) << 
-			" in this room!" << std::endl;
+	if(!item){
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			"There is no item called " << COLOR(itemName, RED) << 
+			" in this room!" << std::endl);
+		return false;
 	}
-	
-	return Result(ss.str(), goForward);
+	std::string name = item->Name();
+	AddItem(item);
+	PRINT_BOX(GameStream::SUCCESS_COLOR,
+		"You took " << COLOR(name, GREEN) << "." << std::endl);
+	return true;
 }
 
-Actor::Result Actor::Drop(const std::vector<std::string>& command){
-	return Result();
-}
-
-Actor::Result Actor::TalkTo(const std::vector<std::string>& command){
-	return Result();
-}
-
-Actor::Result Actor::Use(const std::vector<std::string>& command){
-	return Result();
-}
-
-Actor::Result Actor::Inventory(const std::vector<std::string>& command){
-	std::stringstream ss;
-	if(_items.size() == 0){
-		ss << "You have no items." << std::endl;
-	}else{
-		ss << "You have the following items:" << std::endl;
-		Utils::PrintListInColors(ss, _items, { Format::BLUE, Format::CYAN });
+bool Actor::Drop(const std::vector<std::string>& command){
+	if(command.size() == 0){
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			"You need to specify what you want to drop." << std::endl);
+		return false;
 	}
-	return Result(ss.str(), false);
+
+	std::string itemName = Utils::Concatenate(command);
+	std::unique_ptr<Item> item = Utils::RemoveItem(_items, itemName);
+
+	if(!item){
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			"You have no item called " << COLOR(itemName, RED) << std::endl);
+		return false;
+	}
+
+	std::string name = item->Name();
+	_location->AddItem(item);
+	PRINT_BOX(GameStream::SUCCESS_COLOR,
+		"You dropped " << COLOR(name, GREEN) << "." << std::endl);
+	return true;
+}
+
+bool Actor::TalkTo(const std::vector<std::string>& command) {
+	if(command.size() == 0) {
+		PRINT_BOX(GameStream::FAIL_COLOR,
+			"You need to specify what you want to drop." << std::endl);
+		return false;
+	}
+
+	return false;
 }
 
 void Actor::SaveImplementation(std::ostream& os) const {
+	os << _name << ' ';
+	IO::PrintDescription(os, _description);
 	IO::PrintList(os, _items);
 }
 
 void Actor::LoadImplementation(std::istream& is) {
 	_items = IO::ParseList<Item>(is);
 }
+
+std::ostream& operator<<(std::ostream& os, const Lab3::Actor& e){
+	os << e.Name() <<  COLOR(": ", FG_DEFAULT) << e._description;
+	return os;
+}
+
+
 
 }

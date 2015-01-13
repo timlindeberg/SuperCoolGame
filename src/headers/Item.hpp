@@ -2,7 +2,6 @@
 #define LAB3__ENTITY
 
 #include "IO.hpp"
-#include <typeinfo>
 
 namespace Lab3{
 	
@@ -11,8 +10,8 @@ class Item : public IO {
 public:
 
 	Item();
-	Item(std::string name);
-	Item(std::string name, unsigned int price, unsigned int weight);
+
+	virtual Item* Clone() const = 0;
 
 	unsigned int Price() const;
 	unsigned int Weight() const;
@@ -25,11 +24,9 @@ protected:
 	unsigned int _weight;
 
 	virtual void SaveImplementation(std::ostream& os) const override;
-	virtual void LoadImplementation(std::istream& os) override;
+	virtual void LoadImplementation(std::istream& is) override;
 
 private:
-
-	IO_FACTORY_REGISTER_DECL(Item);
 
 };
 }

@@ -22,17 +22,6 @@
 #define CREATE_INSTANCE(NAME) \
 	IO::Factory<NAME>::CreateInstance(#NAME) 
 
-
-// Temporary print macros for debugging
-#define pr(a) std::cout << a << std::endl
-#define prn(a) std::cout << #a << ": " << a << std::endl
-#define prv(a)  { 												\
-					for(size_t i = 0; i < a.size(); ++i){		\
-						std::cout << i << ": " << a[i] << " ";	\
-					}											\
-					std::cout << std::endl;						\
-				}												\
-
 namespace Lab3{
 
 class IO {
@@ -68,6 +57,7 @@ public:
 
 	std::string Type() const;
 	std::string Name() const;
+
 	const std::string& Description() const;
 	void SetName(const std::string& name);
 
@@ -81,8 +71,6 @@ public:
 	static const char LIST_END;
 	static const char LIST_SEP; 
 	static const char MAP_SEP;
-	static const std::string UNDER;
-	static const std::string OVER;
 
 	static std::string ReadObject(std::istream& is);
 	static std::string ReadList(std::istream& is);
@@ -90,6 +78,9 @@ public:
 
 	template<class T>
 	static std::unique_ptr<T> ParseObject(std::istream& is);
+
+	template<class T> 
+	static T ParseStruct(std::istream& is);
 
 	template<class T>
 	static std::vector<std::unique_ptr<T>> ParseList(std::istream& is);

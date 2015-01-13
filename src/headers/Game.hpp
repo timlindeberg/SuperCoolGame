@@ -10,30 +10,33 @@
 #include "IO.hpp"
 #include "Commandable.hpp"
 #include "Item.hpp"
-#include "Room.hpp"
 #include "Actor.hpp"
+#include "GameStream.hpp"
+#include "Parser.hpp"
+#include "CommandExecutor.hpp"
 
 namespace Lab3{
 
+class Player;
+class Room;
 class Game : public IO, public Commandable {
 	
 public:
 
 	Game();
-	
 	static Game* Instance();
 
 	void Run();
-	Actor* GetPlayer() const;
+	Player* GetPlayer() const;
+	State::Value State() const;
 	Room* GetCurrentRoom() const;
 	bool IsRunning() const;
 
 	// Commands
-	Result SaveGame(const std::vector<std::string>& command);
-	Result LoadGame(const std::vector<std::string>& command);
-	Result Quit(const std::vector<std::string>& command);
-	Result Help(const std::vector<std::string>& command);
-	Result Inspect(const std::vector<std::string>& command);
+	bool NewGame(const std::vector<std::string>& command);
+	bool SaveGame(const std::vector<std::string>& command);
+	bool LoadGame(const std::vector<std::string>& command);
+	bool Quit(const std::vector<std::string>& command);
 
 protected:
 
@@ -42,22 +45,18 @@ protected:
 
 private:
 
-	bool TryCommands(Commandable* commandable,
-	 	std::vector<std::string>& words, bool& goForward);
-
+	void Introduction();
 	virtual void InitCommandMap() override;
-
-	// Command map
-	std::vector<std::string> ParseCommand() const;
 
 	static const std::string _gameFilePath;
 	static const std::string _savePath;
+	static const std::string _saveExtension;
 	static Game* _instance;
 
+	State::Value _currentState;
 	bool _isRunning;
 	std::vector<std::unique_ptr<Room>> _rooms;
-	Actor* _player;
-	Room* _currentRoom;
+	Player* _player;
 
 };
 }

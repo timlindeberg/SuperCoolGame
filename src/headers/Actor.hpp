@@ -5,14 +5,14 @@
 #include <typeinfo>
 
 #include "IO.hpp"
-#include "Commandable.hpp"
 #include "Format.hpp"
 #include "Item.hpp"
+#include "GameStream.hpp"
 
 namespace Lab3{
 
 class Room;
-class Actor : public IO, public Commandable {
+class Actor : public IO {
 
 public:
 
@@ -27,12 +27,12 @@ public:
 	std::unique_ptr<Item> RemoveItem(const std::string& item);
 
 	// Commands
-	virtual Result Go(const std::vector<std::string>& command);
-	virtual Result Take(const std::vector<std::string>& command);
-	virtual Result Drop(const std::vector<std::string>& command);
-	virtual Result TalkTo(const std::vector<std::string>& command);
-	virtual Result Use(const std::vector<std::string>& command);
-	virtual Result Inventory(const std::vector<std::string>& command);
+	virtual bool Go(const std::vector<std::string>& command);
+	virtual bool Take(const std::vector<std::string>& command);
+	virtual bool Drop(const std::vector<std::string>& command);
+	virtual bool TalkTo(const std::vector<std::string>& command);
+
+	friend std::ostream& operator<<(std::ostream& os, const Actor& e);
 
 protected:
 
@@ -43,8 +43,6 @@ protected:
 	virtual void LoadImplementation(std::istream& os) override;
 
 private:
-
-	virtual void InitCommandMap() override;
 
 	IO_FACTORY_REGISTER_DECL(Actor);
 };

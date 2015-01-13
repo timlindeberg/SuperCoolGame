@@ -1,5 +1,9 @@
 #include "Utils.hpp"
 
+uint32_t Utils::seed = 1;
+std::random_device Utils::rd;
+std::mt19937 Utils::RNG = std::mt19937(seed);
+
 std::vector<std::string> Utils::Split(const std::string& s, char delim){
 	std::vector<std::string> v;
 	std::stringstream ss(s);
@@ -18,7 +22,6 @@ std::string Utils::Concatenate(const std::vector<std::string>& v){
 	std::string s = ss.str();
 	return Trim(s);
 }
-
 
 std::string& Utils::Trim(std::string& s) {
     return LeftTrim(RightTrim(s));
@@ -57,6 +60,32 @@ std::string& Utils::ToLowerCase(std::string& s){
 	return s;
 }
 
+std::string& Utils::RemoveAnsiFormating(std::string& s){
+	static std::regex regex("\033\\[(\\d*)m");
+	static std::string compare = "\033";
+	static std::string empty;
+	if(s.find(compare) != std::string::npos){
+		s = std::regex_replace(s, regex, empty);
+	}
+	return s;
+}
+
+size_t Utils::PrintSize(std::string s){
+	RemoveAnsiFormating(s);
+	size_t numTabs = Utils::Count(s, '\t');
+	return s.size() + numTabs * 4;
+}
+
+size_t Utils::Count(const std::string& s, char c){
+	size_t count = 0;
+	for(auto character : s){
+		if(character == c){
+			count++;
+		}
+	}
+	return count;
+}
+
 std::vector<std::string>& Utils::RemoveBlankWords(std::vector<std::string>& v){
 	for(auto it = v.begin(); it != v.end();) {
 	    if (Utils::AllWhitespace(*it))
@@ -66,7 +95,6 @@ std::vector<std::string>& Utils::RemoveBlankWords(std::vector<std::string>& v){
 	}
 	return v;
 }
-
 
 bool Utils::AllWhitespace(const std::string& s){
 	if(s == "")
@@ -78,5 +106,36 @@ bool Utils::AllWhitespace(const std::string& s){
 		}
 	}
 	return true;
+} 
+
+
+Format::Code Utils::PercentColor(double percentage){
+	if(percentage < 0.33){
+		return Format::RED;
+	}else if(percentage >= 0.33 && percentage < 0.66){
+		return Format::YELLOW;
+	}else{
+		return Format::GREEN;
+	}
+} 
+
+
+int Utils::NormalDistInt(double mean, double stdDev){
+    std::normal_distribution<float> dist(mean, stdDev);
+    return dist(RNG);
 }
 
+int Utils::RandomInt(double min, double max){
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(RNG);
+}
+
+float Utils::RandomFloat(float min, float max){
+    std::uniform_real_distribution<float> dist(min, max);
+    return dist(RNG);
+}
+
+bool Utils::RandomBool(double probability){
+    std::bernoulli_distribution dist(probability);
+    return dist(RNG);
+}

@@ -2,11 +2,11 @@
 
 namespace Lab3{
 
-IO_FACTORY_REGISTER_DEF(Item);
-
-Item::Item() {}
+Item::Item() : _price(0), _weight(0) {}
 
 void Item::SaveImplementation(std::ostream& os) const {
+	os << _name << ' ';
+	IO::PrintDescription(os, _description);
 	os << _price  << ' '; 
 	os << _weight << ' '; 
 }
@@ -25,7 +25,9 @@ unsigned int Item::Weight() const{
 }
 
 std::ostream& operator<<(std::ostream& os, const Lab3::Item& e){
-	os << e.Name() << "(" << e._weight << ", " << e._price << ")";
+	os << e.Name();
+	os << COLOR(" ( Price: ", FG_DEFAULT) << COLOR(e._price, YELLOW);
+	os << ", Weight: " << COLOR(e._weight, YELLOW) << ")";
 	return os;
 }
 

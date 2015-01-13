@@ -1,1 +1,0 @@
-{ [ Room room1 " You are standing in a dark room. " { } { } { North|room2 , West|room3 } ] , [ Room room2 " You are standing in a bright room. " { [ Player tim " ce player. " { [ Item sword " A cool sword. " 10 5 ] } ] } { } { South|room1 } ] , [ Room room3 " You are standing in a medium bright room. " { } { } { East|room1 } ] } 
