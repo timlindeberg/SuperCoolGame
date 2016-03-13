@@ -1,38 +1,275 @@
 { 
-[ Room room1 "You are standing in a dark room." 
+[ Room room1 "You are standing in the captains cockpit. You can see a nearby planet through the window." 
 	{ 
-		[ Player tim "" 
+		[ Player Player "" { } 70 [ Stats 70 3 3 3 ] ] , 
+		[ HelperBot HelperBot9000 "A very helpful helper bot of the latest model."
+			{ } 0
 			{ 
-				[ StatItem Sword1 "Cool as fuck" 10 5 [ Stats 0 1 1 1 ] ] 
-			}
-			50 [ Stats 50 3 3 3 ]
+				"Hello! I am helperbot 9000 at your service!" , 
+				"There are foreign creatures aboard the vessel, sir! I detect hundreds of them.
+				You should get to an escape pod. They're located in the north west part of the ship. That 
+				part of the ship is however in lockdown. You will need to find the the override key card to
+				gain access!" , 
+				"The armory is located in the south west part of the ship. Some weapons and armor could prove useful." ,
+				"The breach seem to be located in the north eastern part of the ship, I would suggest not heading that way!" ,
+				"The override key is usually kept in the south eastern part of the ship. Would seem reasonable to keep it 
+				in the captains room but who am I to argue."
+				"The teleport rooms are located in the eastern and western parts of the ship and are currently scanning for planets.
+				You might be able to escape that way, though it seems extremely dangerous. I would recommend the escape pods!"
+			 }
+			0 0 { }
 		]
 	} 
 	{ } 
-	{ North|room2|RedKey , West|room3 , East|room4 }
+	{ North|room2 }
 ] , 
-[ Room room2 "You are standing in a bright room."
-	{ 
-		[ Alien A1 "A fighting actor." { } 20 [ Stats 20 2 2 2 ] ] ,
-		[ Actor A2 "A regular actor." { } ]
-	}
-	{ 
-		[ StatItem Sword "A cool sword." 10 5 [ Stats 20 2 2 2 ] ]
-	}
-	{ South|room1 }
-] , 
-[ Room room3 "You are standing in a medium bright room."
+[ Room room2 "You are standing in very long corridor. There are sirens blasting and red lights are flashing everywhere."
 	{ }
-	{ 
-		[ HealingItem Potion "A healing potion." 10 5 25 ] ,
-		[ HealingItem RedKey "A red key." 10 5 25 ]
-	}
-	{ East|room1 }
-] , 
-[ ItemSpawningRoom room4 "You are standing in a spawning room."
 	{ }
-	{ [ HealingItem Stuff "Stuff that heals." 10 5 25 ] }
-	{ West|room1 }
-	1.0 3 [ HealingItem Stuff "Stuff that heals." 10 5 25 ]
+	{ South|room1 , East|room3 , West|room13 }
+] ,
+[ Room room3 "You are in the dining room. Someone forgot to do the dishes, they're starting to pile up."
+	{
+	 	[ HelperBot DishBot8000 "A bot that does dishes. It seems broken." { } 0
+		 	{
+		 		"bzzz..bbbzzz" ,
+		 		"Hellooooo szzziir-" ,
+		 		"bzzbbzzz...zzbzb"
+		 	}
+		 	0 0 { }
+	 	]
+	}
+	{ 
+		[ StatItem LaserGun "Good thing you keep a spare laser gun in the cupboards! 
+		It's not the greatest model but at least it's cheap." 1 5 [ Stats 0 4 0 0 ] ] ,
+		[ HealingItem Cookies "Delicious!" 2 1 50 ] ,
+		[ HealingItem Sandwich "Who made this? It looks really good." 2 1 40 ]
+	}
+	{ West|room2 , North|room4 }
+] ,
+[ Room room4 "You are in the south west part of the sleeping quarters.
+	 There are a lot of beds here considering there is only one person on the ship."
+	{
+		[ Alien A1 "A green, horrifying alien. It doesn't seem to fond of you." 
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			} 
+		10 [ Stats 10 2 2 2 ] 
+		] ,
+		[ MedicalBot MB1 "A medical bot. It looks evil!" { } 8 [ Stats 8 0 4 4 ] 10 0 0 ]
+	}
+	{ }
+	{ South|room3 , East|room5 , North|room6 }
+] ,
+[ Room room5 "You are in the south east part of the sleeping quarters. This is where you usually sleep,
+	one of the beds are even made."
+	{
+		[ Alien A2 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		10 [ Stats 10 2 2 2 ]
+		] ,
+		[ Alien A3 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		8 [ Stats 8 2 2 2 ]
+		]
+	}
+	{ }
+	{ West|room4 , North|room7 , South|room9 }
+] ,
+[ Room room6 "You are in the north west part of the sleeping quarters. No ones been here in forever, there is
+	dust everywhere. You really should get a new cleaning droid when this is all over."
+	{
+		[ Alien A3 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		12 [ Stats 12 2 2 2 ]
+		] ,
+		[ Alien A4 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		10 [ Stats 10 2 2 2 ]
+		] ,
+		[ Alien A5 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		7 [ Stats 7 2 2 2 ]
+		] ,
+		[ Alien A6 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		10 [ Stats 10 2 2 2 ]
+		]
+	}
+	{ }
+	{ South|room4 , East|room7 }
+] ,
+[ Room room7 "You are in the north east part of the sleeping quarters. This place is crawling with aliens, 
+	the breach must be close!"
+	{
+		[ Alien A7 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		10 [ Stats 10 2 2 2 ]
+		] ,
+		[ Alien A8 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		8 [ Stats 8 2 2 2 ]
+		] ,
+		[ Alien A0 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		11 [ Stats 11 2 2 2 ]
+		] , 
+		[ MedicalBot MB2 "A medical bot. It looks evil!" { } 6 [ Stats 6 0 4 4 ] 10 0 0 ] , 
+		[ MedicalBot MB3 "A medical bot. It looks evil!" { } 10 [ Stats 10 0 4 4 ] 10 0 0 ]
+	}
+	{ }
+	{ South|room5 , West|room6 , North|room8 }
+] ,
+[ ActorSpawningRoom room8 "You have reached the breach! There is a huge hole in the wall where Hunters are 
+	crawling in from!"
+	{ }
+	{ }
+	{ South|room7 }
+	1 0.2 1 [ Hunter Hunter "A deadly beast with only one goal. To kill you!" { } 15 [ Stats 15 4 4 4 ] 0 ]
+] ,
+[ ItemSpawningRoom room9 "You are in the eastern growing chambers, this is where all the food on the ship comes
+	from. The food grows really quickly, thanks to science!"
+	{ }
+	{ }
+	{ North|room5 , South|room10 , East|room12 }
+	0.2 4 [ HealingItem SpaceFood "The stuff dreams are made off!" 1 1 10 ]
+] ,
+[ Room room10 "You are walking down a long hallway. It's really long."
+	{
+		[ Alien A10 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		10 [ Stats 10 2 2 2 ]
+		] ,
+		[ Alien A11 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		8 [ Stats 8 2 2 2 ]
+		]
+	}
+	{ }
+	{ North|room9 , South|room11 }
+] ,
+[ Room room11 "You are in the engine room! It's really loud in here!"
+	{ }
+	{ [ Key OverrideKey "The key card to override the lockdown." 999 1 ] }
+	{ North|room10 }
+] , 
+[ TeleporterRoom room12 "You are in the eastern teleporter room. There is a large teleporter in the center of the room,
+ 	kind of like in Star Trek. You can see the computer scanning for nearby planets on a huge monitor."
+	{ }
+	{ }
+	{ West|room9 }
+	0
+	[ Alien Alien "A werd looking alien." { } 10 [ Stats 10 3 2 2 ] ]
+	{ }
+] ,
+[ Room room13 "You are in a large room with blinking ligthts."
+	{ }
+	{ }
+	{ East|room2 , North|room14 }
+] ,
+[ Room room14 "You are standing in the ships excercise facilities."
+	{ 
+		[ MedicalBot MB3 "A medical bot. It looks evil!" { } 6 [ Stats 6 0 4 4 ] 10 0 0 ] 
+	}
+	{ }
+	{ South|room13 , West|room15 , North|room16 }
+] ,
+[ Room room15 "You are standing in a completely empty room. There is absolutetly nothing here."
+	{ }
+	{ }
+	{ East|room14 , North|room17 , South|room19 }
+] ,
+[ Room room16 "You are standing in a burning room. There is fire everywhere, good thing you're wearing
+	a space suit."
+	{ 
+		[ MedicalBot MB3 "A medical bot. It looks evil!" { } 7 [ Stats 7 0 2 4 ] 10 0 0 ] 
+		[ MedicalBot MB4 "A medical bot. It looks evil!" { } 6 [ Stats 6 0 2 4 ] 10 0 0 ] 
+		[ MedicalBot MB6 "A medical bot. It looks evil!" { } 10 [ Stats 10 0 2 4 ] 10 0 0 ] 
+		[ Alien A12 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		12 [ Stats 8 2 2 2 ]
+		]
+	}
+	{ }
+	{ South|room14 , West|room17 }
+] ,
+[ Room room17 "You are in a corridor that leads to the escape pods. You're almost there!"
+	{
+		[ Alien A13 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		10 [ Stats 10 2 2 2 ]
+		] ,
+		[ Alien A14 "A green, horrifying alien. It doesn't seem to fond of you."
+			{
+				[ HealingItem AlienGoo "Edbile Alien Goo, Yummy!" 4 1 25 ] 
+			}
+		6 [ Stats 7 2 2 2 ]
+		] ,
+		[ MedicalBot MB7 "A medical bot. It looks evil!" { } 10 [ Stats 10 0 2 4 ] 10 0 0 ]
+	}
+	{ }
+	{ South|room15 , East|room16 , North|room18|OverrideKey }
+] ,
+[ WinningRoom room18 "The escape pods!"
+	{ }
+	{ }
+	{ South|room7 }
+	"You managed to reach the escape pod and flee the ship."
+] ,
+[ Room room19 "You are standing in a cross way."
+	{ }
+	{ }
+	{ North|room15 , South|room20 , West|room22 }
+] ,
+[ Room room20 "You are standing in a long corridor. So long."
+	{ }
+	{ }
+	{ North|room19 , South|room21 }
+] ,
+[ Room room21 "You are standing in the armory! It looks like it has been ransacked but there are still
+	some things left."
+	{ }
+	{
+		[ StatItem Armor "A descent set of armor." 25 15 [ Stats 50 0 0 0 ] ] ,
+		[ StatItem HoverBoots "Some awesome hover boots. They should help you move faster!" 
+		25 5 [ Stats 0 0 10 0 ] ] ,
+		[ StatItem TinFoilHat "This thing definantly makes you smarter!" 25 1 [ Stats 0 0 0 10 ] ]
+	}
+	{ North|room20 }
+] ,
+[ TeleporterRoom room22 "You are in the western teleporter room. There is a large teleporter in the center of the room,
+ 	kind of like in Star Trek. You can see the computer scanning for nearby planets on a huge monitor."
+	{ }
+	{ }
+	{ East|room19 }
+	0
+	[ Alien Alien "A werd looking alien." { } 10 [ Stats 10 3 2 2 ] ]
+	{ }
 ]
 }
